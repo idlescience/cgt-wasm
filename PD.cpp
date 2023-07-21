@@ -66,12 +66,6 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
 
     // objective function
     glp_add_cols(lp, n + 1);
-    // impu_constr
-    glp_add_rows(lp, n);
-    // unsett_ineq
-    glp_add_rows(lp, s);
-    // equality constraint
-    glp_add_rows(lp, 1);
 
     int ia_index = 1;
 
@@ -90,55 +84,63 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     glp_set_col_bnds(lp, epsi_index, GLP_FR, 0.0, 0.0);
     glp_set_obj_coef(lp, epsi_index, 1);
 
+    vector<int> eq_indices(s, -1);
+    vector<int> unsett_ineq_indices(s, -1);
+    vector<int> impu_constr_indices(n, -1);
+    int constraintIndex = 0;
+
+    for (unsigned short int j = 0; j < n; j++) {
+        int player_index = j + 1;
+        Asettled[0][j] = true;
+
+        // x({i}) >= v({i}); for all i = 1 ... n;
+        constraintIndex++;
+        glp_add_rows(lp, 1);
+        impu_constr_indices[j] = constraintIndex;
+        const char *individual_constraint_row_name = ("x({" + std::to_string(j) + "}) >= v({" + std::to_string(j) +
+                                                      "})" + " = " + std::to_string(v[j])).c_str();
+        glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
+        glp_set_row_bnds(lp, constraintIndex, GLP_LO, singleton_bounds[j], 0.0);
+        ia[ia_index] = constraintIndex;
+        ja[ia_index] = player_index;
+        ar[ia_index] = 1.0;
+        ia_index++;
+    }
+
     for (unsigned int i = 0; i < s; i++) {
-        // IloExpr ineq(env);
-        int coalition_index = n + i + 1;
+        // x(S) + e(1) >= v(S); S subset of N;
+        constraintIndex++;
+        glp_add_rows(lp, 1);
+        unsett_ineq_indices[i] = constraintIndex;
+        const char *excess_constraint_col_name = "x(S) + e(1) >= v(S)";
+        glp_set_row_name(lp, constraintIndex, excess_constraint_col_name);
+        glp_set_row_bnds(lp, constraintIndex, GLP_LO, v[i], 0.0);
+        ia[ia_index] = constraintIndex;
+        ja[ia_index] = epsi_index;
+        ar[ia_index] = 1.0;
+        ia_index++;
+
         for (unsigned short int j = 0; j < n; j++) {
             int player_index = j + 1;
             if (A[i][j]) {
-                // ineq += X[j];
-                ia[ia_index] = coalition_index;
-                ja[ia_index] = player_index;
-                ar[ia_index] = 1.0;
-                ia_index++;
-            }
-            if (i == 0) {
-                Asettled[0][j] = true;
-                // impu_constr[j] = (X[j] >= singleton_bounds[j]);
-                // individual rationality constraint
-                const char *individual_constraint_col_name = (
-                        "x{" + std::to_string(j) + "} >= v({" + std::to_string(j) + "})"
-                        + " = " + std::to_string(v[i])
-                ).c_str();
-                glp_set_row_name(lp, player_index, individual_constraint_col_name);
-                glp_set_row_bnds(lp, player_index, GLP_LO, singleton_bounds[j], 0.0);
-                ia[ia_index] = player_index;
+                ia[ia_index] = constraintIndex;
                 ja[ia_index] = player_index;
                 ar[ia_index] = 1.0;
                 ia_index++;
             }
         }
-        // ineq += X[n];
-        // unsett_ineq[i] = (ineq >= v[i]);
-        // coalition excess constraint
-        const char *excess_constraint_col_name = "x(S) + e(1) >= v(S)";
-        glp_set_row_name(lp, coalition_index, excess_constraint_col_name);
-        glp_set_row_bnds(lp, coalition_index, GLP_LO, v[i], 0.0);
-        ia[ia_index] = coalition_index;
-        ja[ia_index] = epsi_index;
-        ar[ia_index] = 1.0;
-        ia_index++;
     }
 
-    // equaity constraint
-    glp_set_row_name(lp, n + s + 1, "eq");
-    glp_set_row_bnds(lp, n + s + 1, GLP_FX, v[s], 0.0);
+    // x(N) = v(N)
+    constraintIndex++;
+    glp_add_rows(lp, 1);
+    eq_indices[s] = constraintIndex;
+    const char *eq_constraint_row_name = "x(N) = v(N)";
+    glp_set_row_name(lp, constraintIndex, eq_constraint_row_name);
+    glp_set_row_bnds(lp, constraintIndex, GLP_FX, v[s], 0.0);
     for (unsigned short int j = 0; j < n; j++) {
         int player_index = j + 1;
-
-        // eq += X[j];
-        // equality constraint coefficients
-        ia[ia_index] = n + s + 1;
+        ia[ia_index] = constraintIndex;
         ja[ia_index] = player_index;
         ar[ia_index] = 1.0;
         ia_index++;
@@ -163,7 +165,7 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     }
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
-            int coalition_index = n + i + 1;
+            int coalition_index = unsett_ineq_indices[i];
             if (glp_get_row_dual(lp, coalition_index) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
@@ -175,6 +177,7 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
                         if (disp) {
                             cout << "Rank condition satisfied!" << endl;
                         }
+                        glp_delete_prob(lp);
                         cout << "finished!" << endl;
                         return;
                     }
@@ -190,15 +193,16 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
         }
     }
 
-    for (unsigned short int i = 0; i < n; i++) {
-        if (unsettled_p[i]) {
-            int coalition_index = n + i + 1;
-            if (glp_get_row_dual(lp, coalition_index) > prec) {
-                if (binrank(Arref, J, A[pow(2, i) - 1], n)) {
+    for (unsigned short int j = 0; j < n; j++) {
+        if (unsettled_p[j]) {
+            int player_index = impu_constr_indices[j];
+            if (glp_get_row_dual(lp, player_index) > prec) {
+                if (binrank(Arref, J, A[pow(2, j) - 1], n)) {
                     rank++;
-                    if (disp)
-                        cout << "Dual: lambda_impu" << i + 1 << " > 0, rank = " << rank << " (" << s - pow(2, i)
+                    if (disp) {
+                        cout << "Dual: lambda_impu" << j + 1 << " > 0, rank = " << rank << " (" << s - pow(2, j)
                              << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         t = cpuTime() - t1;
                         if (disp) {
@@ -208,27 +212,29 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
                         cout << "finished!" << endl;
                         return;
                     }
-                    rowechform(Arref, J, A[pow(2, i) - 1], n, rank);
-                    Asettled[rank - 1] = A[pow(2, i) - 1];
-                    settled_values[rank - 1] = v[pow(2, i) - 1];
-                    if (disp)
-                        cout << "SETTLED: " << pow(2, i) << " at " << v[pow(2, i) - 1] << endl;
+                    rowechform(Arref, J, A[pow(2, j) - 1], n, rank);
+                    Asettled[rank - 1] = A[pow(2, j) - 1];
+                    settled_values[rank - 1] = v[pow(2, j) - 1];
+                    if (disp) {
+                        cout << "SETTLED: " << pow(2, j) << " at " << v[pow(2, j) - 1] << endl;
+                    }
                 }
-                unsettled[pow(2, i) - 1] = false;
-                unsettled[s - pow(2, i)] = false;
-                unsettled_p[i] = false;
+                unsettled[pow(2, j) - 1] = false;
+                unsettled[s - pow(2, j)] = false;
+                unsettled_p[j] = false;
             }
         }
     }
 
-    if (disp)
+    glp_delete_prob(lp);
+
+    if (disp) {
         cout << endl << "   ---===   FIRST LP SOLVED   ===---   " << endl << endl;
+    }
     double xS;
     while (rank < n) {
-        iteration(
-                unsettled, s, xS, n, A, x, v, epsi, prec, Arref, J, rank, disp, Asettled, settled_values, iter,
-                sr, unsettled_p, singleton_bounds, nlsu
-        );
+        iteration(unsettled, s, xS, n, A, x, v, epsi, prec, Arref, J, rank, disp, Asettled, settled_values, iter, sr,
+                  unsettled_p, singleton_bounds, nlsu);
     }
     t = cpuTime() - t1;
     cout << "PD finished!" << endl;
@@ -243,16 +249,9 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
 void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned short int &n, vector<vector<bool>> &A,
                vector<double> &x, vector<double> &v, double &epsi, double &prec, vector<vector<double>> &Arref,
                vector<bool> &J, unsigned short int &rank, bool &disp, vector<vector<bool>> &Asettled,
-               vector<double> &settled_values, unsigned short int &iter, unsigned int &sr,
-               vector<bool> &unsettled_p, vector<double> &singleton_bounds, bool &nlsu) {
+               vector<double> &settled_values, unsigned short int &iter, unsigned int &sr, vector<bool> &unsettled_p,
+               vector<double> &singleton_bounds, bool &nlsu) {
 
-    IloEnv env;
-    IloModel model(env);
-    IloNumVarArray X(env, n + 1, -IloInfinity, IloInfinity);
-    IloExpr obj(env);
-
-
-    obj = X[n];
     vector<bool> T(s, false);
     vector<unsigned int> T_coord(0, 0);
     unsigned int t_size = 0;
@@ -274,6 +273,7 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             }
         }
     }
+
     for (unsigned int i = 0; i < n; i++) {
         if (unsettled_p[i]) {
             if (abs(x[i] - singleton_bounds[i]) < prec) {
@@ -283,6 +283,7 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             }
         }
     }
+
     if (disp) {
         cout << "Tight coalitions:" << endl;
         for (unsigned short int i = 0; i < t_size; i++)
@@ -293,13 +294,17 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
                 cout << T2_coord[i] + 1 << endl;
         }
     }
+
     vector<vector<bool>> Atight(t_size, vector<bool>(n, false));
-    unsigned int l = 0;
-    for (unsigned int i = 0; i < t_size; i++)
+    for (unsigned int i = 0; i < t_size; i++) {
         Atight[i] = A[T_coord[i]];
+    }
+
     vector<vector<bool>> Atight2(t2_size, vector<bool>(n, false));
-    for (unsigned int i = 0; i < t2_size; i++)
+    for (unsigned int i = 0; i < t2_size; i++) {
         Atight2[i] = A[T2_coord[i]];
+    }
+
     vector<bool> U(t_size, true);
     vector<bool> U2(t2_size, true);
     subroutine(U, U2, Atight, Atight2, Arref, J, prec, n, t_size, t2_size, rank, disp, Asettled, sr, settled_values,
@@ -313,10 +318,12 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
         cout << endl;
     }
-    if (rank == n)
+    if (rank == n) {
         return;
-    if (disp)
+    }
+    if (disp) {
         cout << "Rank increased to: " << rank << endl;
+    }
     if (!nlsu) {
         for (unsigned int i = 0; i < s; i++) {
             if (unsettled[i]) {
@@ -327,65 +334,154 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             }
         }
     }
+
     for (unsigned short int i = 0; i < n; i++) {
-        if (unsettled_p[i] == true && unsettled[pow(2, i) - 1] == false)
+        if (unsettled_p[i] == true && unsettled[pow(2, i) - 1] == false) {
             unsettled_p[i] = false;
+        }
     }
 
-    IloExpr eq(env);
-    IloRangeArray unsett_ineq(env, s);
-    IloRangeArray impu_constr(env, n);
+    // IloEnv env;
+    glp_prob *lp;
+    int ia[1 + 1000], ja[1 + 1000];
+    double ar[1 + 1000];
+    lp = glp_create_prob();
+    glp_set_prob_name(lp, "P(2)");
+    glp_set_obj_dir(lp, GLP_MIN);
+
+    // objective function
+    glp_add_cols(lp, n + 1);
+
+    int ia_index = 1;
+
+    for (unsigned short int j = 0; j < n; j++) {
+        // set column names and coefficients
+        int player_index = j + 1;
+        const char *player_col_name = ("x{" + std::to_string(j) + "}").c_str();
+        glp_set_col_name(lp, player_index, player_col_name);
+        glp_set_col_bnds(lp, player_index, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, player_index, 0.0);
+    }
+
+    // the only coefficient of the objective function, epsi
+    int epsi_index = n + 1;
+    glp_set_col_name(lp, epsi_index, "e(1)");
+    glp_set_col_bnds(lp, epsi_index, GLP_FR, 0.0, 0.0);
+    glp_set_obj_coef(lp, epsi_index, 1);
+
+    vector<int> eq_indices(s, -1);
+    vector<int> unsett_ineq_indices(s, -1);
+    vector<int> impu_constr_indices(n, -1);
+    int constraintIndex = 1;
+
+    for (unsigned short int j = 0; j < n; j++) {
+        if (unsettled_p[j]) {
+            int player_index = j + 1;
+
+            // x({i}) >= v({i}); for all i = 1 ... n;
+            constraintIndex++;
+            glp_add_rows(lp, 1);
+            impu_constr_indices[j] = constraintIndex;
+            const char *individual_constraint_row_name = ("x({" + std::to_string(j) + "}) >= v({" + std::to_string(j) +
+                                                          "})" + " = " + std::to_string(v[j])).c_str();
+            glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
+            glp_set_row_bnds(lp, constraintIndex, GLP_LO, singleton_bounds[j], 0.0);
+            ia[ia_index] = constraintIndex;
+            ja[ia_index] = player_index;
+            ar[ia_index] = 1.0;
+            ia_index++;
+        }
+    }
+
+    // x(N) = v(N)
+    constraintIndex++;
+    glp_add_rows(lp, 1);
+    eq_indices[s] = constraintIndex;
+    const char *eq_constraint_row_name = "x(N) = v(N)";
+    glp_set_row_name(lp, constraintIndex, eq_constraint_row_name);
+    glp_set_row_bnds(lp, constraintIndex, GLP_FX, v[s], 0.0);
+    for (unsigned short int j = 0; j < n; j++) {
+        int player_index = j + 1;
+        ia[ia_index] = constraintIndex;
+        ja[ia_index] = player_index;
+        ar[ia_index] = 1.0;
+        ia_index++;
+    }
+
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
-            IloExpr ineq(env);
+            // x(S) + e(1) >= v(S); S in unsettled;
+            constraintIndex++;
+            glp_add_rows(lp, 1);
+            unsett_ineq_indices[i] = constraintIndex;
+            const char *excess_constraint_col_name = "x(S) + e(1) >= v(S)";
+            glp_set_row_name(lp, constraintIndex, excess_constraint_col_name);
+            glp_set_row_bnds(lp, constraintIndex, GLP_LO, v[i], 0.0);
+            ia[ia_index] = constraintIndex;
+            ja[ia_index] = epsi_index;
+            ar[ia_index] = 1.0;
+            ia_index++;
+
             for (unsigned short int j = 0; j < n; j++) {
-                if (A[i][j])
-                    ineq += X[j];
+                int player_index = j + 1;
+                if (A[i][j]) {
+                    ia[ia_index] = constraintIndex;
+                    ja[ia_index] = player_index;
+                    ar[ia_index] = 1.0;
+                    ia_index++;
+                }
             }
-            ineq += X[n];
-            unsett_ineq[i] = (ineq >= v[i]);
         }
     }
-    model.add(unsett_ineq);
+
     for (unsigned int i = 1; i < rank; i++) {
-        IloExpr settled(env);
+        // x(S) = v(S); S in settled;
+        constraintIndex++;
+        glp_add_rows(lp, 1);
+        unsett_ineq_indices[i] = constraintIndex;
+        const char *excess_constraint_col_name = "x(S) + e(1) >= v(S)";
+        glp_set_row_name(lp, constraintIndex, excess_constraint_col_name);
+        glp_set_row_bnds(lp, constraintIndex, GLP_FX, settled_values[i], 0.0);
+        ia[ia_index] = constraintIndex;
+        ja[ia_index] = epsi_index;
+        ar[ia_index] = 0.0;
+        ia_index++;
+
         for (unsigned short int j = 0; j < n; j++) {
-            if (Asettled[i][j])
-                settled += X[j];
-            if (i == 1) {
-                eq += X[j];
-                if (unsettled_p[j])
-                    impu_constr[j] = (X[j] >= singleton_bounds[j]);
+            int player_index = j + 1;
+            if (Asettled[i][j]) {
+                ia[ia_index] = constraintIndex;
+                ja[ia_index] = player_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
             }
         }
-        IloRange sett_ineq = (settled == settled_values[i]);
-        model.add(sett_ineq);
     }
-    model.add(impu_constr);
-    IloRange r = (eq == v[s]);
-    model.add(r);
-    model.add(IloMinimize(env, obj));
-    IloCplex lp(model);
-    lp.setParam(IloCplex::Param::RootAlgorithm, 1);
-    lp.setParam(IloCplex::Param::Preprocessing::Presolve, 0);
-    if (!disp)
-        lp.setOut(env.getNullStream());
-    else
+
+    glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
+    glp_simplex(lp, NULL);
+
+    if (disp) {
         cout << endl << "   ---===   SOLVING THE " << iter + 1 << "-TH LP   ===---   " << endl << endl;
+    }
+
     IloNumArray x_val(env, n + 1);
-    for (unsigned short int i = 0; i < n; i++)
+    for (unsigned short int i = 0; i < n; i++) {
         x_val[i] = x[i];
+    }
     x_val[n] = epsi;
     lp.setStart(x_val, NULL, X, NULL, NULL, NULL);
     lp.solve();
     iter++;
-    for (unsigned short int i = 0; i < n; i++)
+    for (unsigned short int i = 0; i < n; i++) {
         x[i] = lp.getValue(X[i]);
+    }
     epsi = lp.getValue(X[n]);
     if (disp) {
         cout << "New solution point:" << endl;
-        for (unsigned short int i = 0; i < n; i++)
+        for (unsigned short int i = 0; i < n; i++) {
             cout << x[i] << endl;
+        }
         cout << "Epsilon: " << epsi << endl;
     }
 
@@ -394,20 +490,23 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             if (lp.getDual(unsett_ineq[i]) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
-                    if (disp)
+                    if (disp) {
                         cout << "Dual: lambda_" << i + 1 << " > 0, rank = " << rank << " (" << s - i
                              << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         env.end();
-                        if (disp)
+                        if (disp) {
                             cout << "Rank condition satisfied!" << endl;
+                        }
                         return;
                     }
                     rowechform(Arref, J, A[i], n, rank);
                     Asettled[rank - 1] = A[i];
                     settled_values[rank - 1] = v[i] - epsi;
-                    if (disp)
+                    if (disp) {
                         cout << "SETTLED: " << i + 1 << " at " << v[i] - epsi << endl;
+                    }
                 }
                 unsettled[i] = false;
                 unsettled[s - 1 - i] = false;
@@ -420,20 +519,23 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             if (lp.getDual(impu_constr[i]) > prec) {
                 if (binrank(Arref, J, A[pow(2, i) - 1], n)) {
                     rank++;
-                    if (disp)
+                    if (disp) {
                         cout << "Dual: lambda_impu" << i + 1 << " > 0, rank = " << rank << " (" << s - pow(2, i)
                              << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         env.end();
-                        if (disp)
+                        if (disp) {
                             cout << "Rank condition satisfied!" << endl;
+                        }
                         return;
                     }
                     rowechform(Arref, J, A[pow(2, i) - 1], n, rank);
                     Asettled[rank - 1] = A[pow(2, i) - 1];
                     settled_values[rank - 1] = v[pow(2, i) - 1];
-                    if (disp)
+                    if (disp) {
                         cout << "SETTLED: " << pow(2, i) << " at " << v[pow(2, i) - 1] << endl;
+                    }
                 }
                 unsettled[pow(2, i) - 1] = false;
                 unsettled[s - pow(2, i)] = false;
@@ -443,8 +545,9 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     }
 
     env.end();
-    if (disp)
+    if (disp) {
         cout << endl << "   ---===   " << iter << "-TH LP SOLVED   ===---   " << endl << endl;
+    }
 }
 
 void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2,
