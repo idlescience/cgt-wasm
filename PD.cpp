@@ -56,7 +56,7 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     settled_values[0] = v[s];
     double epsi = 0;
 
-    // IloEnv env;
+    // GLPK
     glp_prob *lp;
     int ia[1 + 1000], ja[1 + 1000];
     double ar[1 + 1000];
@@ -72,7 +72,7 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     for (unsigned short int j = 0; j < n; j++) {
         // set column names and coefficients
         int player_index = j + 1;
-        const char *player_col_name = ("x{" + std::to_string(j) + "}").c_str();
+        const char *player_col_name = ("x{" + std::to_string(player_index) + "}").c_str();
         glp_set_col_name(lp, player_index, player_col_name);
         glp_set_col_bnds(lp, player_index, GLP_FR, 0.0, 0.0);
         glp_set_obj_coef(lp, player_index, 0.0);
@@ -97,8 +97,9 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
         constraintIndex++;
         glp_add_rows(lp, 1);
         impu_constr_indices[j] = constraintIndex;
-        const char *individual_constraint_row_name = ("x({" + std::to_string(j) + "}) >= v({" + std::to_string(j) +
-                                                      "})" + " = " + std::to_string(v[j])).c_str();
+        const char *individual_constraint_row_name = ("x({" + std::to_string(player_index) + "}) >= v({" +
+                                                      std::to_string(j) + "})" + " = " +
+                                                      std::to_string(v[player_index])).c_str();
         glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
         glp_set_row_bnds(lp, constraintIndex, GLP_LO, singleton_bounds[j], 0.0);
         ia[ia_index] = constraintIndex;
@@ -169,16 +170,17 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
             if (glp_get_row_dual(lp, coalition_index) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
-                    if (disp)
+                    if (disp) {
                         cout << "Dual: lambda_" << i + 1 << " > 0, rank = " << rank << " (" << s - i
                              << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         t = cpuTime() - t1;
                         if (disp) {
                             cout << "Rank condition satisfied!" << endl;
                         }
-                        glp_delete_prob(lp);
                         cout << "finished!" << endl;
+                        glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[i], n, rank);
@@ -208,8 +210,8 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
                         if (disp) {
                             cout << "Rank condition satisfied!" << endl;
                         }
-                        glp_delete_prob(lp);
                         cout << "finished!" << endl;
+                        glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[pow(2, j) - 1], n, rank);
@@ -263,8 +265,9 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         if (unsettled[i]) {
             xS = 0;
             for (unsigned short int j = 0; j < n; j++) {
-                if (A[i][j])
+                if (A[i][j]) {
                     xS += x[j];
+                }
             }
             if (abs(v[i] - xS - epsi) < prec) {
                 T[i] = true;
@@ -285,13 +288,17 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     }
 
     if (disp) {
-        cout << "Tight coalitions:" << endl;
-        for (unsigned short int i = 0; i < t_size; i++)
-            cout << T_coord[i] + 1 << endl;
+        if (t_size > 0) {
+            cout << "Tight coalitions:" << endl;
+            for (unsigned short int i = 0; i < t_size; i++) {
+                cout << T_coord[i] + 1 << endl;
+            }
+        }
         if (t2_size > 0) {
             cout << "T0:" << endl;
-            for (unsigned short int i = 0; i < t_size; i++)
+            for (unsigned short int i = 0; i < t2_size; i++) {
                 cout << T2_coord[i] + 1 << endl;
+            }
         }
     }
 
@@ -341,7 +348,7 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
     }
 
-    // IloEnv env;
+    // GLPK
     glp_prob *lp;
     int ia[1 + 1000], ja[1 + 1000];
     double ar[1 + 1000];
@@ -357,7 +364,7 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     for (unsigned short int j = 0; j < n; j++) {
         // set column names and coefficients
         int player_index = j + 1;
-        const char *player_col_name = ("x{" + std::to_string(j) + "}").c_str();
+        const char *player_col_name = ("x{" + std::to_string(player_index) + "}").c_str();
         glp_set_col_name(lp, player_index, player_col_name);
         glp_set_col_bnds(lp, player_index, GLP_FR, 0.0, 0.0);
         glp_set_obj_coef(lp, player_index, 0.0);
@@ -382,8 +389,9 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             constraintIndex++;
             glp_add_rows(lp, 1);
             impu_constr_indices[j] = constraintIndex;
-            const char *individual_constraint_row_name = ("x({" + std::to_string(j) + "}) >= v({" + std::to_string(j) +
-                                                          "})" + " = " + std::to_string(v[j])).c_str();
+            const char *individual_constraint_row_name = ("x({" + std::to_string(player_index) + "}) >= v({" +
+                                                          std::to_string(j) + "})" + " = " +
+                                                          std::to_string(v[j])).c_str();
             glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
             glp_set_row_bnds(lp, constraintIndex, GLP_LO, singleton_bounds[j], 0.0);
             ia[ia_index] = constraintIndex;
@@ -410,11 +418,11 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
-            // x(S) + e(1) >= v(S); S in unsettled;
+            // x(S) + e(k) >= v(S); S in unsettled;
             constraintIndex++;
             glp_add_rows(lp, 1);
             unsett_ineq_indices[i] = constraintIndex;
-            const char *excess_constraint_col_name = "x(S) + e(1) >= v(S)";
+            const char *excess_constraint_col_name = "x(S) + e(k) >= v(S)";
             glp_set_row_name(lp, constraintIndex, excess_constraint_col_name);
             glp_set_row_bnds(lp, constraintIndex, GLP_LO, v[i], 0.0);
             ia[ia_index] = constraintIndex;
@@ -458,25 +466,23 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
     }
 
-    glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
-    glp_simplex(lp, NULL);
-
     if (disp) {
         cout << endl << "   ---===   SOLVING THE " << iter + 1 << "-TH LP   ===---   " << endl << endl;
     }
 
-    IloNumArray x_val(env, n + 1);
-    for (unsigned short int i = 0; i < n; i++) {
-        x_val[i] = x[i];
-    }
-    x_val[n] = epsi;
-    lp.setStart(x_val, NULL, X, NULL, NULL, NULL);
-    lp.solve();
+    // NO warm start option. Kept going with solving from scratch
+
+    glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
+    glp_simplex(lp, NULL);
     iter++;
-    for (unsigned short int i = 0; i < n; i++) {
-        x[i] = lp.getValue(X[i]);
+
+    for (unsigned short int j = 0; j < n; j++) {
+        int player_index = j + 1;
+        x[j] = glp_get_col_prim(lp, player_index);
     }
-    epsi = lp.getValue(X[n]);
+
+    epsi = glp_get_col_prim(lp, epsi_index);
+
     if (disp) {
         cout << "New solution point:" << endl;
         for (unsigned short int i = 0; i < n; i++) {
@@ -487,7 +493,8 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
-            if (lp.getDual(unsett_ineq[i]) > prec) {
+            int coalition_index = unsett_ineq_indices[i];
+            if (glp_get_row_dual(lp, coalition_index) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
                     if (disp) {
@@ -495,10 +502,10 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
                              << " settled as well)" << endl;
                     }
                     if (rank == n) {
-                        env.end();
                         if (disp) {
                             cout << "Rank condition satisfied!" << endl;
                         }
+                        glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[i], n, rank);
@@ -516,7 +523,8 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     for (unsigned short int i = 0; i < n; i++) {
         if (unsettled_p[i]) {
-            if (lp.getDual(impu_constr[i]) > prec) {
+            int player_index = impu_constr_indices[j];
+            if (glp_get_row_dual(lp, player_index) > prec) {
                 if (binrank(Arref, J, A[pow(2, i) - 1], n)) {
                     rank++;
                     if (disp) {
@@ -524,10 +532,10 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
                              << " settled as well)" << endl;
                     }
                     if (rank == n) {
-                        env.end();
                         if (disp) {
                             cout << "Rank condition satisfied!" << endl;
                         }
+                        glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[pow(2, i) - 1], n, rank);
@@ -544,7 +552,8 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
     }
 
-    env.end();
+    glp_delete_prob(lp);
+
     if (disp) {
         cout << endl << "   ---===   " << iter << "-TH LP SOLVED   ===---   " << endl << endl;
     }
@@ -556,77 +565,141 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                 vector<vector<bool>> &Asettled, unsigned int &sr, vector<double> &settled_values,
                 vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s, double &epsi,
                 vector<double> &v, vector<unsigned int> &T2_coord) {
-    unsigned int sumt = 0;
-    vector<bool> t(t_size, false);
-    unsigned short int sumt2 = 0;
-    vector<bool> t2(t2_size, false);
+
 
     IloEnv sr_env;
     IloModel sr_model(sr_env);
+
     IloNumVarArray lambda(sr_env, t_size + t2_size + rank, 0, IloInfinity);
     vector<double> u(t_size + t2_size, 0);
+
     IloExpr sr_obj(sr_env);
     IloRangeArray bal(sr_env, n + 1);
     IloExprArray bal_eq(sr_env, n + 1);
-    for (unsigned int i = 0; i < rank; i++)
+
+    for (unsigned int i = 0; i < rank; i++) {
         lambda[i + t_size + t2_size].setLB(-IloInfinity);
-    IloExpr pos_eq(sr_env);
+    }
+
+
+    // GLPK
+    glp_prob *lp;
+    int ia[1 + 1000], ja[1 + 1000];
+    double ar[1 + 1000];
+    lp = glp_create_prob();
+    glp_set_prob_name(lp, "SUBROUTINE(k)");
+    glp_set_obj_dir(lp, GLP_MAX);
+
+    // objective function
+    glp_add_cols(lp, t_size + t2_size);
+
+
+    for (unsigned short int k = 0; k < t_size + t2_size; k++) {
+        // set column names and coefficients
+        int t_sum_index = k + 1;
+        const char *player_col_name = ("sr{" + std::to_string(t_sum_index) + "}").c_str();
+        glp_set_col_name(lp, t_sum_index, player_col_name);
+        glp_set_col_bnds(lp, t_sum_index, GLP_LO, 0.0, 0.0);
+        glp_set_obj_coef(lp, t_sum_index, 1);
+    }
+
+    vector<int> bal_indices(n + 1, -1);
+    int ia_index = 1;
+    int constraintIndex = 0;
+
     for (unsigned short int i = 0; i < n; i++) {
-        IloExpr eq(sr_env);
+        constraintIndex++;
+        glp_add_rows(lp, 1);
+        bal_indices[i] = constraintIndex;
+        const char *individual_constraint_row_name = ("t({" + std::to_string(i + 1) + "}) = 1").c_str();
+        glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
+        glp_set_row_bnds(lp, constraintIndex, GLP_FX, 0, 0.0);
+
         for (unsigned int j = 0; j < t_size; j++) {
-            if (Atight[j][i] == true)
-                eq += lambda[j];
-            if (i == 0) {
-                pos_eq += lambda[j];
-                sr_obj += lambda[j];
+            if (Atight[j][i] == true) {
+                int tight_index = j + 1;
+                ia[ia_index] = constraintIndex;
+                ja[ia_index] = tight_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
             }
-            if (j < rank && Asettled[j][i] == true)
-                eq += lambda[j + t_size + t2_size];
+            if (j < rank && Asettled[j][i] == true) {
+                int tight_index = j + t_size + t2_size + 1;
+                ia[ia_index] = constraintIndex;
+                ja[ia_index] = tight_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
+            }
         }
         for (unsigned int j = 0; j < t2_size; j++) {
-            if (Atight2[j][i] == true)
-                eq += lambda[j + t_size];
-            if (i == 0)
-                sr_obj += lambda[j + t_size];
+            if (Atight2[j][i] == true) {
+                int tight_index = j + t_size + 1;
+                ia[ia_index] = constraintIndex;
+                ja[ia_index] = tight_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
+            }
         }
         if (rank > t_size) {
             for (unsigned short int j = t_size; j < rank; j++) {
-                if (Asettled[j][i] == true)
-                    eq += lambda[j + t_size + t2_size];
+                if (Asettled[j][i] == true) {
+                    int tight_index = j + t_size + t2_size + 1;
+                    ia[ia_index] = constraintIndex;
+                    ja[ia_index] = tight_index;
+                    ar[ia_index] = 1.0;
+                    ia_index++;
+                }
             }
         }
-        bal_eq[i] = eq;
-        IloRange r = (eq == 0);
-        bal[i] = r;
-        sr_model.add(bal[i]);
     }
-    bal_eq[n] = pos_eq;
-    IloRange r = (pos_eq == 1);
-    bal[n] = r;
-    sr_model.add(bal[n]);
-    IloObjective OBJ = IloMaximize(sr_env, sr_obj);
-    sr_model.add(OBJ);
-    IloCplex SR(sr_model);
-    SR.setParam(IloCplex::Param::RootAlgorithm, 1);
-    if (!disp)
-        SR.setOut(sr_env.getNullStream());
-    else
+
+    constraintIndex++;
+    glp_add_rows(lp, 1);
+    bal_indices[n] = constraintIndex;
+    const char *individual_constraint_row_name = ("t({" + std::to_string(n) + "}) = 1").c_str();
+    glp_set_row_name(lp, constraintIndex, individual_constraint_row_name);
+    glp_set_row_bnds(lp, constraintIndex, GLP_FX, 1, 0.0);
+
+    for (unsigned short int i = 0; i < t_size; i++) {
+        int tight_index = i + 1;
+        ia[ia_index] = constraintIndex;
+        ja[ia_index] = tight_index;
+        ar[ia_index] = 1.0;
+        ia_index++;
+    }
+
+    if (disp) {
         cout << endl << "   ---===   SOLVING SUBROUTINE LP   ===---   " << endl << endl;
-    bool feas = SR.solve();
-    if (disp)
-        cout << "subroutine feasibility: " << feas << endl;
-    sr++;
-    if (feas) {
-        for (unsigned short int j = 0; j < t_size + t2_size; j++)
-            u[j] = SR.getValue(lambda[j]);
     }
+
+    glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
+    int feas = glp_simplex(lp, NULL);
+
+    if (disp) {
+        cout << "subroutine feasibility: " << feas << endl;
+    }
+
+    sr++;
+
+    if (feas == 0) {
+        for (unsigned short int k = 0; k < t_size + t2_size; k++) {
+            const int k_index = k + 1;
+            u[k] = glp_get_col_prim(lp, k_index);
+        }
+    }
+
     unsigned int i;
+    unsigned int sumt = 0;
+    unsigned short int sumt2 = 0;
+    vector<bool> t(t_size, false);
+    vector<bool> t2(t2_size, false);
+
     while (feas) {
         subr_upd(Arref, J, i, pos_eq, n, prec, U, U2, sumt, sumt2, t, t2, Atight, Atight2, t_size, t2_size, SR, lambda,
                  rank, disp, Asettled, settled_values, unsettled, T_coord, s, epsi, v, T2_coord, sr_obj, bal_eq, u);
-        if (rank == n)
+        if (rank == n) {
             return;
-        else {
+        } else {
             i = 0;
             while (i < t_size) {
                 if (t[i] == false) {
@@ -642,11 +715,13 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                         sumt++;
                         unsettled[T_coord[i]] = false;
                         unsettled[s - 1 - T_coord[i]] = false;
-                        if (disp)
+                        if (disp) {
                             cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
-                        if (disp)
+                        }
+                        if (disp) {
                             cout << T_coord[i] + 1 << " and " << s - T_coord[i] << " got settled without rank increase."
                                  << endl;
+                        }
                     }
                 }
                 i++;
@@ -659,29 +734,32 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                         t2[i] = true;
                         sr_obj -= lambda[i + t_size];
                         for (unsigned short int j = 0; j < n; j++) {
-                            if (Atight2[i][j])
+                            if (Atight2[i][j]) {
                                 bal_eq[j] -= lambda[i + t_size];
+                            }
                         }
                         sumt2++;
-                        if (disp)
+                        if (disp) {
                             cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
+                        }
                         if (unsettled[T2_coord[i]]) {
                             unsettled[T2_coord[i]] = false;
                         }
                         if (unsettled[s - 1 - T2_coord[i]]) {
                             unsettled[s - 1 - T2_coord[i]] = false;
-                            if (disp)
+                            if (disp) {
                                 cout << T2_coord[i] + 1 << " and " << s - T2_coord[i]
                                      << " got settled without rank increase." << endl;
+                            }
                         }
                     }
                 }
                 i++;
             }
         }
-        if (sumt == t_size)
+        if (sumt == t_size) {
             return;
-        else {
+        } else {
             sr_model.remove(bal[n]);
             bal_eq[n] = pos_eq;
             r = (pos_eq == 1);
@@ -690,19 +768,22 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
             sr_model.remove(OBJ);
             OBJ = IloMinimize(sr_env, sr_obj);
             sr_model.add(OBJ);
-            if (disp)
+            if (disp) {
                 cout << endl << "   ---===   SOLVING SUBROUTINE LP AGAIN  ===---   " << endl << endl;
+            }
             feas = SR.solve();
-            if (disp)
+            if (disp) {
                 cout << "subroutine feasibility: " << feas << endl;
+            }
             sr++;
             if (feas) {
-                for (unsigned short int j = 0; j < t_size + t2_size; j++)
+                for (unsigned short int j = 0; j < t_size + t2_size; j++) {
                     u[j] = SR.getValue(lambda[j]);
+                }
             }
         }
     }
-    sr_env.end();
+    glp_delete_prob(lp);
 }
 
 void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, IloExpr &pos_eq, unsigned short int &n,
@@ -722,13 +803,15 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, I
             sr_obj -= lambda[i];
             sumt++;
             if (binrank(Arref, J, Atight[i], n)) {
-                if (disp)
+                if (disp) {
                     cout << "Rank increased to " << rank + 1 << " with " << T_coord[i] + 1 << " (and " << s - T_coord[i]
                          << ") getting settled." << endl;
+                }
                 if (rank == n - 1) {
                     rank++;
-                    if (disp)
+                    if (disp) {
                         cout << "Rank condition satisfied!" << endl;
+                    }
                     return;
                 }
                 rowechform(Arref, J, Atight[i], n, rank);
@@ -738,20 +821,24 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, I
                 unsettled[T_coord[i]] = false;
                 unsettled[s - 1 - T_coord[i]] = false;
                 lambda[i].setLB(-IloInfinity);
-                if (disp)
+                if (disp) {
                     cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
+                }
             } else {
                 for (unsigned short int j = 0; j < n; j++) {
-                    if (Atight[i][j])
+                    if (Atight[i][j]) {
                         bal_eq[j] -= lambda[i];
+                    }
                 }
                 unsettled[T_coord[i]] = false;
                 unsettled[s - 1 - T_coord[i]] = false;
-                if (disp)
+                if (disp) {
                     cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
-                if (disp)
+                }
+                if (disp) {
                     cout << T_coord[i] + 1 << " and " << s - T_coord[i] << " got settled without rank increase."
                          << endl;
+                }
             }
         }
         i++;
@@ -764,13 +851,15 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, I
             sumt2++;
             sr_obj -= lambda[i + t_size];
             if (binrank(Arref, J, Atight2[i], n)) {
-                if (disp)
+                if (disp) {
                     cout << "Rank increased to " << rank + 1 << " with " << T2_coord[i] + 1 << " (and "
                          << s - T2_coord[i] << ") getting settled." << endl;
+                }
                 if (rank == n - 1) {
                     rank++;
-                    if (disp)
+                    if (disp) {
                         cout << "Rank condition satisfied!" << endl;
+                    }
                     return;
                 }
                 rowechform(Arref, J, Atight2[i], n, rank);
@@ -780,20 +869,24 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, I
                 unsettled[T2_coord[i]] = false;
                 unsettled[s - 1 - T2_coord[i]] = false;
                 lambda[i + t_size].setLB(-IloInfinity);
-                if (disp)
+                if (disp) {
                     cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
+                }
             } else {
                 for (unsigned short int j = 0; j < n; j++) {
-                    if (Atight2[i][j])
+                    if (Atight2[i][j]) {
                         bal_eq[j] -= lambda[i + t_size];
+                    }
                 }
                 unsettled[T2_coord[i]] = false;
                 unsettled[s - 1 - T2_coord[i]] = false;
-                if (disp)
+                if (disp) {
                     cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
-                if (disp)
+                }
+                if (disp) {
                     cout << T2_coord[i] + 1 << " and " << s - T2_coord[i] << " got settled without rank increase."
                          << endl;
+                }
             }
         }
         i++;
