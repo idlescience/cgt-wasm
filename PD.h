@@ -17,7 +17,7 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                 vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s, double &epsi,
                 vector<double> &v, vector<unsigned int> &T2_coord);
 
-void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, IloExpr &pos_eq, unsigned short int &n,
+void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, glp_prob &lp, vector<int> &pos_eq_indices, int (&ar)[], unsigned short int &n,
               double &prec, vector<bool> &U, vector<bool> &U2, unsigned int &sumt, unsigned short int &sumt2,
               vector<bool> &t, vector<bool> &t2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2,
               unsigned int &t_size, unsigned short int &t2_size, IloCplex &SR, IloNumVarArray &lambda,

@@ -1,8 +1,9 @@
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <algorithm>
+#include <cstdio>
 #include <vector>
 #include <iostream>
-#include <time.h>
+#include <ctime>
 #include <fstream>
 #include <glpk.h>
 
