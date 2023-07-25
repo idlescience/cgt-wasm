@@ -58,8 +58,9 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
 
     // GLPK
     glp_prob *lp;
-    int ia[1 + 1000], ja[1 + 1000];
-    double ar[1 + 1000];
+    int ia[1 + 1000] = {0};
+    int ja[1 + 1000] = {0};
+    double ar[1 + 1000] = {0};
     lp = glp_create_prob();
     glp_set_prob_name(lp, "P(1)");
     glp_set_obj_dir(lp, GLP_MIN);
@@ -71,11 +72,11 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
 
     for (unsigned short int j = 0; j < n; j++) {
         // set column names and coefficients
-        int player_index = j + 1;
-        const char *col_name = ("x{" + std::to_string(player_index) + "}").c_str();
-        glp_set_col_name(lp, player_index, col_name);
-        glp_set_col_bnds(lp, player_index, GLP_FR, 0.0, 0.0);
-        glp_set_obj_coef(lp, player_index, 0.0);
+        const int col_index = j + 1;
+        const char *col_name = ("x{" + std::to_string(col_index) + "}").c_str();
+        glp_set_col_name(lp, col_index, col_name);
+        glp_set_col_bnds(lp, col_index, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, col_index, 0.0);
     }
 
     // the only coefficient of the objective function, epsi
@@ -84,25 +85,24 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     glp_set_col_bnds(lp, epsi_index, GLP_FR, 0.0, 0.0);
     glp_set_obj_coef(lp, epsi_index, 1);
 
-    vector<int> eq_indices(s, -1);
     vector<int> unsett_ineq_indices(s, -1);
     vector<int> impu_constr_indices(n, -1);
     int constr_index = 0;
 
     for (unsigned short int j = 0; j < n; j++) {
-        int player_index = j + 1;
+        const int col_index = j + 1;
         Asettled[0][j] = true;
 
         // x({i}) >= v({i}); for all i = 1 ... n;
         constr_index++;
         glp_add_rows(lp, 1);
         impu_constr_indices[j] = constr_index;
-        const char *row_name = ("x({" + std::to_string(player_index) + "}) >= v({" + std::to_string(j) + "})" + " = " +
-                                std::to_string(v[player_index])).c_str();
+        const char *row_name = ("x({" + std::to_string(col_index) + "}) >= v({" + std::to_string(j) + "})" + " = " +
+                                std::to_string(v[col_index])).c_str();
         glp_set_row_name(lp, constr_index, row_name);
         glp_set_row_bnds(lp, constr_index, GLP_LO, singleton_bounds[j], 0.0);
         ia[ia_index] = constr_index;
-        ja[ia_index] = player_index;
+        ja[ia_index] = col_index;
         ar[ia_index] = 1.0;
         ia_index++;
     }
@@ -121,10 +121,10 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
         ia_index++;
 
         for (unsigned short int j = 0; j < n; j++) {
-            int player_index = j + 1;
+            const int col_index = j + 1;
             if (A[i][j]) {
                 ia[ia_index] = constr_index;
-                ja[ia_index] = player_index;
+                ja[ia_index] = col_index;
                 ar[ia_index] = 1.0;
                 ia_index++;
             }
@@ -134,14 +134,13 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     // x(N) = v(N)
     constr_index++;
     glp_add_rows(lp, 1);
-    eq_indices[s] = constr_index;
     const char *row_name = "x(N) = v(N)";
     glp_set_row_name(lp, constr_index, row_name);
     glp_set_row_bnds(lp, constr_index, GLP_FX, v[s], 0.0);
     for (unsigned short int j = 0; j < n; j++) {
-        int player_index = j + 1;
+        const int col_index = j + 1;
         ia[ia_index] = constr_index;
-        ja[ia_index] = player_index;
+        ja[ia_index] = col_index;
         ar[ia_index] = 1.0;
         ia_index++;
     }
@@ -151,8 +150,8 @@ void PD(bool &disp, unsigned short int &n, vector<double> &v, unsigned short int
     iter++;
 
     for (unsigned short int j = 0; j < n; j++) {
-        int player_index = j + 1;
-        x[j] = glp_get_col_prim(lp, player_index);
+        const int col_index = j + 1;
+        x[j] = glp_get_col_prim(lp, col_index);
     }
 
     epsi = glp_get_col_prim(lp, epsi_index);
@@ -347,8 +346,9 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     // GLPK
     glp_prob *lp;
-    int ia[1 + 1000], ja[1 + 1000];
-    double ar[1 + 1000];
+    int ia[1 + 1000] = {0};
+    int ja[1 + 1000] = {0};
+    double ar[1 + 1000] = {0};
     lp = glp_create_prob();
     glp_set_prob_name(lp, "P(2)");
     glp_set_obj_dir(lp, GLP_MIN);
@@ -360,11 +360,11 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     for (unsigned short int j = 0; j < n; j++) {
         // set column names and coefficients
-        int player_index = j + 1;
-        const char *col_name = ("x{" + std::to_string(player_index) + "}").c_str();
-        glp_set_col_name(lp, player_index, col_name);
-        glp_set_col_bnds(lp, player_index, GLP_FR, 0.0, 0.0);
-        glp_set_obj_coef(lp, player_index, 0.0);
+        const int col_index = j + 1;
+        const char *col_name = ("x{" + std::to_string(col_index) + "}").c_str();
+        glp_set_col_name(lp, col_index, col_name);
+        glp_set_col_bnds(lp, col_index, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, col_index, 0.0);
     }
 
     // the only coefficient of the objective function, epsi
@@ -373,25 +373,24 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     glp_set_col_bnds(lp, epsi_index, GLP_FR, 0.0, 0.0);
     glp_set_obj_coef(lp, epsi_index, 1);
 
-    vector<int> eq_indices(s, -1);
     vector<int> unsett_ineq_indices(s, -1);
     vector<int> impu_constr_indices(n, -1);
     int constr_index = 1;
 
     for (unsigned short int j = 0; j < n; j++) {
         if (unsettled_p[j]) {
-            int player_index = j + 1;
+            const int col_index = j + 1;
 
             // x({i}) >= v({i}); for all i = 1 ... n;
             constr_index++;
             glp_add_rows(lp, 1);
             impu_constr_indices[j] = constr_index;
-            const char *row_name = ("x({" + std::to_string(player_index) + "}) >= v({" + std::to_string(j) + "})" +
-                                    " = " + std::to_string(v[j])).c_str();
+            const char *row_name = ("x({" + std::to_string(col_index) + "}) >= v({" + std::to_string(j) + "})" + " = " +
+                                    std::to_string(v[j])).c_str();
             glp_set_row_name(lp, constr_index, row_name);
             glp_set_row_bnds(lp, constr_index, GLP_LO, singleton_bounds[j], 0.0);
             ia[ia_index] = constr_index;
-            ja[ia_index] = player_index;
+            ja[ia_index] = col_index;
             ar[ia_index] = 1.0;
             ia_index++;
         }
@@ -400,14 +399,13 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     // x(N) = v(N)
     constr_index++;
     glp_add_rows(lp, 1);
-    eq_indices[s] = constr_index;
     const char *row_name = "x(N) = v(N)";
     glp_set_row_name(lp, constr_index, row_name);
     glp_set_row_bnds(lp, constr_index, GLP_FX, v[s], 0.0);
     for (unsigned short int j = 0; j < n; j++) {
-        int player_index = j + 1;
+        const int col_index = j + 1;
         ia[ia_index] = constr_index;
-        ja[ia_index] = player_index;
+        ja[ia_index] = col_index;
         ar[ia_index] = 1.0;
         ia_index++;
     }
@@ -427,10 +425,10 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             ia_index++;
 
             for (unsigned short int j = 0; j < n; j++) {
-                int player_index = j + 1;
+                const int col_index = j + 1;
                 if (A[i][j]) {
                     ia[ia_index] = constr_index;
-                    ja[ia_index] = player_index;
+                    ja[ia_index] = col_index;
                     ar[ia_index] = 1.0;
                     ia_index++;
                 }
@@ -446,16 +444,12 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         const char *row_name = "x(S) + e(1) >= v(S)";
         glp_set_row_name(lp, constr_index, row_name);
         glp_set_row_bnds(lp, constr_index, GLP_FX, settled_values[i], 0.0);
-        ia[ia_index] = constr_index;
-        ja[ia_index] = epsi_index;
-        ar[ia_index] = 0.0;
-        ia_index++;
 
         for (unsigned short int j = 0; j < n; j++) {
-            int player_index = j + 1;
+            const int col_index = j + 1;
             if (Asettled[i][j]) {
                 ia[ia_index] = constr_index;
-                ja[ia_index] = player_index;
+                ja[ia_index] = col_index;
                 ar[ia_index] = 1.0;
                 ia_index++;
             }
@@ -473,8 +467,8 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     iter++;
 
     for (unsigned short int j = 0; j < n; j++) {
-        int player_index = j + 1;
-        x[j] = glp_get_col_prim(lp, player_index);
+        const int col_index = j + 1;
+        x[j] = glp_get_col_prim(lp, col_index);
     }
 
     epsi = glp_get_col_prim(lp, epsi_index);
@@ -561,92 +555,101 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                 vector<double> &v, vector<unsigned int> &T2_coord) {
     // GLPK
     glp_prob *lp;
-    int ia[1 + 1000], ja[1 + 1000];
-    double ar[1 + 1000];
+    int ia[1 + 1000] = {0};
+    int ja[1 + 1000] = {0};
+    double ar[1 + 1000] = {0};
     lp = glp_create_prob();
     glp_set_prob_name(lp, "SUBROUTINE(k)");
     glp_set_obj_dir(lp, GLP_MAX);
 
     // objective function
-    glp_add_cols(lp, t_size + t2_size);
+    glp_add_cols(lp, t_size + t2_size + rank);
 
-    for (unsigned short int k = 0; k < t_size + t2_size; k++) {
-        // set column names and coefficients
-        // sr_obj
-        int sr_obj_index = k + 1;
-        const char *col_name = ("sr{" + std::to_string(sr_obj_index) + "}").c_str();
-        glp_set_col_name(lp, sr_obj_index, col_name);
-        glp_set_col_bnds(lp, sr_obj_index, GLP_LO, 0.0, 0.0);
-        glp_set_obj_coef(lp, sr_obj_index, 1);
+    for (unsigned short int i = 0; i < t_size + t2_size; i++) {
+        // sr_obj from 0 -> t_size + t2_size
+        const int col_index = i + 1;
+        const char *col_name = ("sr{" + std::to_string(col_index) + "}").c_str();
+        glp_set_col_name(lp, col_index, col_name);
+        glp_set_col_bnds(lp, col_index, GLP_LO, 0.0, 0.0);
+        glp_set_obj_coef(lp, col_index, 1);
     }
 
-    vector<int> bal_indices(n + 1, -1);
+    for (unsigned short int i = t_size + t2_size; i < t_size + t2_size + rank; i++) {
+        // sr_obj from t_size + t2_size -> rank + t_size + t2_size
+        const int col_index = i + 1;
+        const char *col_name = ("sr{" + std::to_string(col_index) + "}").c_str();
+        glp_set_col_name(lp, col_index, col_name);
+        glp_set_col_bnds(lp, col_index, GLP_FR, 0.0, 0.0);
+        glp_set_obj_coef(lp, col_index, 0);
+    }
+
+    vector<vector<int>> bal_indices(t_size + t2_size + rank, vector<int>(n + 1, -1));
+    vector<int> constr_indices(n + 1, -1);
     int ia_index = 1;
     int constr_index = 0;
 
-    for (unsigned short int i = 0; i < n; i++) {
+    for (unsigned short int j = 0; j < n; j++) {
         // eq == 0
         constr_index++;
+        constr_indices[j] = constr_index;
         glp_add_rows(lp, 1);
-        bal_indices[i] = constr_index;
-        const char *row_name = ("t({" + std::to_string(i + 1) + "}) = 0").c_str();
+        const char *row_name = ("t({" + std::to_string(j + 1) + "}) = 0").c_str();
         glp_set_row_name(lp, constr_index, row_name);
         glp_set_row_bnds(lp, constr_index, GLP_FX, 0, 0.0);
 
-        for (unsigned int j = 0; j < t_size; j++) {
-            if (Atight[j][i] == true) {
-                int tight_index = j + 1;
+        for (unsigned int i = 0; i < t_size; i++) {
+            if (Atight[i][j] == true) {
+                const int col_index = i + 1;
+                bal_indices[i][j] = ia_index;
                 ia[ia_index] = constr_index;
-                ja[ia_index] = tight_index;
+                ja[ia_index] = col_index;
                 ar[ia_index] = 1.0;
                 ia_index++;
             }
-            if (j < rank && Asettled[j][i] == true) {
-                int tight_index = j + t_size + t2_size + 1;
+            if (rank > i && Asettled[i][j] == true) {
+                const int col_index = i + t_size + t2_size + 1;
+                bal_indices[i][j] = ia_index;
                 ia[ia_index] = constr_index;
-                ja[ia_index] = tight_index;
-                ar[ia_index] = 1.0;
-                ia_index++;
-            }
-        }
-        for (unsigned int j = 0; j < t2_size; j++) {
-            if (Atight2[j][i] == true) {
-                int tight_index = j + t_size + 1;
-                ia[ia_index] = constr_index;
-                ja[ia_index] = tight_index;
+                ja[ia_index] = col_index;
                 ar[ia_index] = 1.0;
                 ia_index++;
             }
         }
-        if (rank > t_size) {
-            for (unsigned short int j = t_size; j < rank; j++) {
-                if (Asettled[j][i] == true) {
-                    int tight_index = j + t_size + t2_size + 1;
-                    ia[ia_index] = constr_index;
-                    ja[ia_index] = tight_index;
-                    ar[ia_index] = 1.0;
-                    ia_index++;
-                }
+        for (unsigned int i = 0; i < t2_size; i++) {
+            if (Atight2[i][j] == true) {
+                const int col_index = i + t_size + 1;
+                bal_indices[i][j] = ia_index;
+                ia[ia_index] = constr_index;
+                ja[ia_index] = col_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
+            }
+        }
+        for (unsigned short int i = t_size; i < rank; i++) {
+            if (rank > t_size && Asettled[i][j] == true) {
+                const int col_index = i + t_size + t2_size + 1;
+                bal_indices[i][j] = ia_index;
+                ia[ia_index] = constr_index;
+                ja[ia_index] = col_index;
+                ar[ia_index] = 1.0;
+                ia_index++;
             }
         }
     }
 
     // pos_eq == 1
     constr_index++;
+    constr_indices[n] = constr_index;
     glp_add_rows(lp, 1);
-    bal_indices[n] = constr_index;
     const char *row_name = ("t({" + std::to_string(n) + "}) = 1").c_str();
     glp_set_row_name(lp, constr_index, row_name);
     glp_set_row_bnds(lp, constr_index, GLP_FX, 1, 0.0);
 
-
-    vector<int> pos_eq_indices(t_size, -1);
-
     for (unsigned short int i = 0; i < t_size; i++) {
-        int tight_index = i + 1;
-        pos_eq_indices[i] = ia_index;
+        const int col_index = i + 1;
+        bal_indices[i][n] = ia_index;
         ia[ia_index] = constr_index;
-        ja[ia_index] = tight_index;
+        ja[ia_index] = col_index;
         ar[ia_index] = 1.0;
         ia_index++;
     }
@@ -667,9 +670,9 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
     vector<double> u(t_size + t2_size, 0);
 
     if (feas == 0) {
-        for (unsigned short int k = 0; k < t_size + t2_size; k++) {
-            const int k_index = k + 1;
-            u[k] = glp_get_col_prim(lp, k_index);
+        for (unsigned short int i = 0; i < t_size + t2_size; i++) {
+            const int col_index = i + 1;
+            u[i] = glp_get_col_prim(lp, col_index);
         }
     }
 
@@ -680,9 +683,9 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
     vector<bool> t2(t2_size, false);
 
     while (feas) {
-        subr_upd(Arref, J, i, lp, pos_eq_indices, ar, n, prec, U, U2, sumt, sumt2, t, t2, Atight, Atight2, t_size, t2_size, SR,
-                 lambda, rank, disp, Asettled, settled_values, unsettled, T_coord, s, epsi, v, T2_coord, sr_obj, bal_eq,
-                 u);
+        subr_upd(Arref, J, i, lp, constr_indices, bal_indices, ia, ja, ar, n, prec, U, U2, sumt, sumt2, t, t2, Atight, Atight2, t_size, t2_size,
+                 SR, lambda, rank, disp, Asettled, settled_values, unsettled, T_coord, s, epsi, v, T2_coord, sr_obj,
+                 bal_eq, u);
         if (rank == n) {
             return;
         } else {
@@ -692,15 +695,37 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                     U[i] = false;
                     t[i] = true;
 
-                    const int pos_eq_ia_index = pos_eq_indices[i];
-                    ar[pos_eq_ia_index] = 0;
+                    const int ia_ref_index = bal_indices[i][n];
+                    if (ia_ref_index > -1) {
+                        ar[ia_ref_index] = ar[ia_ref_index] - 1;
+                    } else {
+                        const int constr_ref_index = constr_indices[n];
+                        const int col_index = i + 1;
+                        bal_indices[i][n] = ia_index;
+                        ia[ia_index] = constr_ref_index;
+                        ja[ia_index] = col_index;
+                        ar[ia_index] = -1;
+                        ia_index++;
+                    }
 
                     const int sr_obj_index = i + 1;
-                    glp_set_obj_coef(lp, sr_obj_index, 0);
+                    const double sr_obj_coef = glp_get_obj_coef(lp, sr_obj_index);
+                    glp_set_obj_coef(lp, sr_obj_index, sr_obj_coef - 1);
 
                     for (unsigned short int j = 0; j < n; j++) {
                         if (Atight[i][j]) {
-                            bal_eq[j] -= lambda[i];
+                            const int ia_ref_index = bal_indices[i][j];
+                            if (ia_ref_index > -1) {
+                                ar[ia_ref_index] = ar[ia_ref_index] - 1;
+                            } else {
+                                const int constr_ref_index = constr_indices[j];
+                                const int col_index = i + 1;
+                                bal_indices[i][n] = ia_index;
+                                ia[ia_index] = constr_ref_index;
+                                ja[ia_index] = col_index;
+                                ar[ia_index] = -1;
+                                ia_index++;
+                            }
                         }
                     }
                     sumt++;
@@ -722,10 +747,25 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                     if (!(binrank(Arref, J, Atight2[i], n))) {
                         U2[i] = false;
                         t2[i] = true;
-                        sr_obj -= lambda[i + t_size];
+
+                        const int sr_obj_index = i + t_size + 1;
+                        const double sr_obj_coef = glp_get_obj_coef(lp, sr_obj_index);
+                        glp_set_obj_coef(lp, sr_obj_index, sr_obj_coef - 1);
+
                         for (unsigned short int j = 0; j < n; j++) {
                             if (Atight2[i][j]) {
-                                bal_eq[j] -= lambda[i + t_size];
+                                const int ia_ref_index = bal_indices[i + t_size][j];
+                                if (ia_ref_index > -1) {
+                                    ar[ia_ref_index] = ar[ia_ref_index] - 1;
+                                } else {
+                                    const int constr_ref_index = constr_indices[j];
+                                    const int col_index = i + t_size + 1;
+                                    bal_indices[i][n] = ia_index;
+                                    ia[ia_index] = constr_ref_index;
+                                    ja[ia_index] = col_index;
+                                    ar[ia_index] = -1;
+                                    ia_index++;
+                                }
                             }
                         }
                         sumt2++;
@@ -750,25 +790,21 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
         if (sumt == t_size) {
             return;
         } else {
-            sr_model.remove(bal[n]);
-            bal_eq[n] = pos_eq;
-            r = (pos_eq == 1);
-            bal[n] = r;
-            sr_model.add(bal[n]);
-            sr_model.remove(OBJ);
-            OBJ = IloMinimize(sr_env, sr_obj);
-            sr_model.add(OBJ);
             if (disp) {
                 cout << endl << "   ---===   SOLVING SUBROUTINE LP AGAIN  ===---   " << endl << endl;
             }
-            feas = SR.solve();
+
+            glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
+            feas = glp_simplex(lp, NULL);
+
             if (disp) {
                 cout << "subroutine feasibility: " << feas << endl;
             }
             sr++;
-            if (feas) {
-                for (unsigned short int j = 0; j < t_size + t2_size; j++) {
-                    u[j] = SR.getValue(lambda[j]);
+            if (feas == 0) {
+                for (unsigned short int i = 0; i < t_size + t2_size; i++) {
+                    const int col_index = i + 1;
+                    u[i] = glp_get_col_prim(lp, col_index);
                 }
             }
         }
@@ -776,14 +812,14 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
     glp_delete_prob(lp);
 }
 
-void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, int (&ia)[], int (&ja)[], int (&ar)[],
-              unsigned short int &n, double &prec, vector<bool> &U, vector<bool> &U2, unsigned int &sumt,
-              unsigned short int &sumt2, vector<bool> &t, vector<bool> &t2, vector<vector<bool>> &Atight,
-              vector<vector<bool>> &Atight2, unsigned int &t_size, unsigned short int &t2_size, IloCplex &SR,
-              IloNumVarArray &lambda, unsigned short int &rank, bool &disp, vector<vector<bool>> &Asettled,
-              vector<double> &settled_values, vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s,
-              double &epsi, vector<double> &v, vector<unsigned int> &T2_coord, IloExpr &sr_obj, IloExprArray &bal_eq,
-              vector<double> &u) {
+void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, glp_prob &lp,
+              vector<int> &constr_indices, vector<vector<int>> &bal_indices, int (&ia)[], int (&ja)[], double (&ar)[], unsigned short int &n, double &prec, vector<bool> &U,
+              vector<bool> &U2, unsigned int &sumt, unsigned short int &sumt2, vector<bool> &t, vector<bool> &t2,
+              vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2, unsigned int &t_size,
+              unsigned short int &t2_size, IloCplex &SR, IloNumVarArray &lambda, unsigned short int &rank, bool &disp,
+              vector<vector<bool>> &Asettled, vector<double> &settled_values, vector<bool> &unsettled,
+              vector<unsigned int> &T_coord, unsigned int &s, double &epsi, vector<double> &v,
+              vector<unsigned int> &T2_coord, IloExpr &sr_obj, IloExprArray &bal_eq, vector<double> &u) {
 
     i = 0;
     while (i < t_size && sumt < t_size) {
