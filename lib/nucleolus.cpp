@@ -1,38 +1,14 @@
-/*
- *    Nucleolus
- *    PD.cpp
- *    Purpose: finding the nucleolus-wasm of a cooperative game using the
- *             primal-dual sequence of Benedek (2019) - Computing the
- *             nucleolus-wasm of cooperative games
- *
- *    @author Marton Benedek
- *    @version 1.0 16/07/2019
- *
- *    This program is free software: you can redistribute it and/or modify
- *    it under the terms of the GNU General Public License as published by
- *    the Free Software Foundation, either version 3 of the License, or
- *    (at your option) any later version.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program. If not, see:
- *    <https://github.com/blrzsvrzs/nucleolus>.
- */
-
 #include "nucleolus.h"
 
-extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsigned short int  n) {
-    unsigned int s = (int)(pow(2, n) - 2);
-    std::vector<double> v(v_orig, v_orig + s + 1);
-    vector<double> x(x_orig, x_orig + n);
+extern "C" EMSCRIPTEN_KEEPALIVE void PD(double *v, double *x, unsigned short int n) {
+    unsigned int s = (int) (pow(2, n) - 2);
     unsigned short int iter = 0;
     unsigned int sr = 0;
     double t = 0;
     bool nlsu = false;
+    bool disp = true;
+
+    // original
     double prec = pow(10, -6);
     vector<bool> unsettled(s + 1, true);
     unsettled[s] = false;
@@ -164,13 +140,27 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
     }
 
     epsi = glp_get_col_prim(lp, epsi_index);
+    if (disp) {
+        cout << "Least core solution:" << endl;
+        for (unsigned short int j = 0; j < n; j++) {
+            cout << x[j] << endl;
+        }
+        cout << "Least core value: " << epsi << endl;
+    }
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
             if (glp_get_row_dual(lp, unsett_ineq_indices[i]) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
+                    if (disp) {
+                        cout << "Dual: lambda_" << i + 1 << " > 0, rank = " << rank << " (" << s - i
+                             << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         t = cpuTime() - t1;
+                        if (disp) {
+                            cout << "Rank condition satisfied!" << endl;
+                        }
                         cout << "finished!" << endl;
                         glp_delete_prob(lp);
                         return;
@@ -178,6 +168,8 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
                     rowechform(Arref, J, A[i], n, rank);
                     Asettled[rank - 1] = A[i];
                     settled_values[rank - 1] = v[i] - epsi;
+                    if (disp)
+                        cout << "SETTLED: " << i + 1 << " at " << v[i] - epsi << endl;
                 }
                 unsettled[i] = false;
                 unsettled[s - 1 - i] = false;
@@ -190,8 +182,15 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
             if (glp_get_row_dual(lp, impu_constr_indices[j]) > prec) {
                 if (binrank(Arref, J, A[(long) (pow(2, j) - 1)], n)) {
                     rank++;
+                    if (disp) {
+                        cout << "Dual: lambda_impu" << j + 1 << " > 0, rank = " << rank << " (" << s - pow(2, j)
+                             << " settled as well)" << endl;
+                    }
                     if (rank == n) {
                         t = cpuTime() - t1;
+                        if (disp) {
+                            cout << "Rank condition satisfied!" << endl;
+                        }
                         cout << "finished!" << endl;
                         glp_delete_prob(lp);
                         return;
@@ -199,6 +198,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
                     rowechform(Arref, J, A[(long) (pow(2, j) - 1)], n, rank);
                     Asettled[rank - 1] = A[(long) (pow(2, j) - 1)];
                     settled_values[rank - 1] = v[(long) (pow(2, j) - 1)];
+                    if (disp) {
+                        cout << "SETTLED: " << pow(2, j) << " at " << v[(long) (pow(2, j) - 1)] << endl;
+                    }
                 }
                 unsettled[(long) (pow(2, j) - 1)] = false;
                 unsettled[(long) (s - pow(2, j))] = false;
@@ -209,9 +211,12 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
 
     glp_delete_prob(lp);
 
+    if (disp) {
+        cout << endl << "   ---===   FIRST LP SOLVED   ===---   " << endl << endl;
+    }
     double xS;
     while (rank < n) {
-        iteration(unsettled, s, xS, n, A, x, v, epsi, prec, Arref, J, rank, Asettled, settled_values, iter, sr,
+        iteration(unsettled, s, xS, n, A, x, v, epsi, prec, Arref, J, rank, disp, Asettled, settled_values, iter, sr,
                   unsettled_p, singleton_bounds, nlsu);
     }
     t = cpuTime() - t1;
@@ -225,8 +230,8 @@ extern "C" EMSCRIPTEN_KEEPALIVE void PD(double * v_orig, double * x_orig, unsign
 }
 
 void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned short int &n, vector<vector<bool>> &A,
-               vector<double> &x, vector<double> &v, double &epsi, double &prec, vector<vector<double>> &Arref,
-               vector<bool> &J, int &rank, vector<vector<bool>> &Asettled, vector<double> &settled_values,
+               double *x, double *v, double &epsi, double &prec, vector<vector<double>> &Arref, vector<bool> &J,
+               int &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
                unsigned short int &iter, unsigned int &sr, vector<bool> &unsettled_p, vector<double> &singleton_bounds,
                bool &nlsu) {
 
@@ -263,6 +268,21 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
     }
 
+    if (disp) {
+        if (t_size > 0) {
+            cout << "Tight coalitions:" << endl;
+            for (unsigned int i = 0; i < t_size; i++) {
+                cout << T_coord[i] + 1 << endl;
+            }
+        }
+        if (t2_size > 0) {
+            cout << "T0:" << endl;
+            for (int i = 0; i < t2_size; i++) {
+                cout << T2_coord[i] + 1 << endl;
+            }
+        }
+    }
+
     vector<vector<bool>> Atight(t_size, vector<bool>(n, false));
     for (unsigned int i = 0; i < t_size; i++) {
         Atight[i] = A[T_coord[i]];
@@ -275,10 +295,22 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     vector<bool> U(t_size, true);
     vector<bool> U2(t2_size, true);
-    subroutine(U, U2, Atight, Atight2, Arref, J, prec, n, t_size, t2_size, rank, Asettled, sr, settled_values,
+    subroutine(U, U2, Atight, Atight2, Arref, J, prec, n, t_size, t2_size, rank, disp, Asettled, sr, settled_values,
                unsettled, T_coord, s, epsi, v, T2_coord);
+    if (disp) {
+        cout << endl << "   ---===   SUBROUTINE FINISHED   ===---   " << endl << endl;
+        cout << "MIN TIGHT SET FOUND!" << endl;
+        for (unsigned int i = 0; i < t_size; i++) {
+            if (!U[i])
+                cout << T_coord[i] + 1 << endl;
+        }
+        cout << endl;
+    }
     if (rank == n) {
         return;
+    }
+    if (disp) {
+        cout << "Rank increased to: " << rank << endl;
     }
     if (!nlsu) {
         for (unsigned int i = 0; i < s; i++) {
@@ -410,6 +442,10 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
         }
     }
 
+    if (disp) {
+        cout << endl << "   ---===   SOLVING THE " << iter + 1 << "-TH LP   ===---   " << endl << endl;
+    }
+
     // NO warm start option. Kept going with solving from scratch
 
     glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
@@ -423,18 +459,36 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
     epsi = glp_get_col_prim(lp, epsi_index);
 
+    if (disp) {
+        cout << "New solution point:" << endl;
+        for (unsigned short int i = 0; i < n; i++) {
+            cout << x[i] << endl;
+        }
+        cout << "Epsilon: " << epsi << endl;
+    }
+
     for (unsigned int i = 0; i < s; i++) {
         if (unsettled[i]) {
             if (glp_get_row_dual(lp, unsett_ineq_indices[i]) > prec) {
                 if (binrank(Arref, J, A[i], n)) {
                     rank++;
+                    if (disp) {
+                        cout << "Dual: lambda_" << i + 1 << " > 0, rank = " << rank << " (" << s - i
+                             << " settled as well)" << endl;
+                    }
                     if (rank == n) {
+                        if (disp) {
+                            cout << "Rank condition satisfied!" << endl;
+                        }
                         glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[i], n, rank);
                     Asettled[rank - 1] = A[i];
                     settled_values[rank - 1] = v[i] - epsi;
+                    if (disp) {
+                        cout << "SETTLED: " << i + 1 << " at " << v[i] - epsi << endl;
+                    }
                 }
                 unsettled[i] = false;
                 unsettled[s - 1 - i] = false;
@@ -447,13 +501,23 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
             if (glp_get_row_dual(lp, impu_constr_indices[j]) > prec) {
                 if (binrank(Arref, J, A[(long) (pow(2, j) - 1)], n)) {
                     rank++;
+                    if (disp) {
+                        cout << "Dual: lambda_impu" << j + 1 << " > 0, rank = " << rank << " (" << s - pow(2, j)
+                             << " settled as well)" << endl;
+                    }
                     if (rank == n) {
+                        if (disp) {
+                            cout << "Rank condition satisfied!" << endl;
+                        }
                         glp_delete_prob(lp);
                         return;
                     }
                     rowechform(Arref, J, A[(long) (pow(2, j) - 1)], n, rank);
                     Asettled[rank - 1] = A[(long) (pow(2, j) - 1)];
                     settled_values[rank - 1] = v[(long) (pow(2, j) - 1)];
+                    if (disp) {
+                        cout << "SETTLED: " << pow(2, j) << " at " << v[(long) (pow(2, j) - 1)] << endl;
+                    }
                 }
                 unsettled[(long) (pow(2, j) - 1)] = false;
                 unsettled[(long) (s - pow(2, j))] = false;
@@ -463,13 +527,17 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
     }
 
     glp_delete_prob(lp);
+
+    if (disp) {
+        cout << endl << "   ---===   " << iter << "-TH LP SOLVED   ===---   " << endl << endl;
+    }
 }
 
 void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2,
                 vector<vector<double>> &Arref, vector<bool> &J, double &prec, unsigned short int &n, int &t_size,
-                int &t2_size, int &rank, vector<vector<bool>> &Asettled, unsigned int &sr,
+                int &t2_size, int &rank, bool &disp, vector<vector<bool>> &Asettled, unsigned int &sr,
                 vector<double> &settled_values, vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s,
-                double &epsi, vector<double> &v, vector<unsigned int> &T2_coord) {
+                double &epsi, double *v, vector<unsigned int> &T2_coord) {
     // GLPK
     glp_prob *lp;
     int ia[1 + 1000] = {0};
@@ -575,8 +643,16 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
         ia_index++;
     }
 
+    if (disp) {
+        cout << endl << "   ---===   SOLVING SUBROUTINE LP   ===---   " << endl << endl;
+    }
+
     glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
     int feas = glp_simplex(lp, nullptr);
+
+    if (disp) {
+        cout << "subroutine feasibility: " << feas << endl;
+    }
 
     sr++;
 
@@ -596,7 +672,7 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
 
     while (feas) {
         subr_upd(Arref, J, lp, ia_index, constr_indices, bal_indices, ia, ja, ar, n, prec, U, U2, sumt, sumt2, t, t2,
-                 Atight, Atight2, t_size, t2_size, rank, Asettled, settled_values, unsettled, T_coord, s, epsi, v,
+                 Atight, Atight2, t_size, t2_size, rank, disp, Asettled, settled_values, unsettled, T_coord, s, epsi, v,
                  T2_coord, u);
         if (rank == n) {
             return;
@@ -643,6 +719,13 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                     sumt++;
                     unsettled[T_coord[i]] = false;
                     unsettled[s - 1 - T_coord[i]] = false;
+                    if (disp) {
+                        cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
+                    }
+                    if (disp) {
+                        cout << T_coord[i] + 1 << " and " << s - T_coord[i] << " got settled without rank increase."
+                             << endl;
+                    }
                 }
                 i++;
             }
@@ -674,11 +757,18 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
                             }
                         }
                         sumt2++;
+                        if (disp) {
+                            cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
+                        }
                         if (unsettled[T2_coord[i]]) {
                             unsettled[T2_coord[i]] = false;
                         }
                         if (unsettled[s - 1 - T2_coord[i]]) {
                             unsettled[s - 1 - T2_coord[i]] = false;
+                            if (disp) {
+                                cout << T2_coord[i] + 1 << " and " << s - T2_coord[i]
+                                     << " got settled without rank increase." << endl;
+                            }
                         }
                     }
                 }
@@ -688,9 +778,16 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
         if (sumt == t_size) {
             return;
         } else {
+            if (disp) {
+                cout << endl << "   ---===   SOLVING SUBROUTINE LP AGAIN  ===---   " << endl << endl;
+            }
+
             glp_load_matrix(lp, ia_index - 1, ia, ja, ar);
             feas = glp_simplex(lp, nullptr);
 
+            if (disp) {
+                cout << "subroutine feasibility: " << feas << endl;
+            }
             sr++;
             if (feas == 0) {
                 for (int i = 0; i < t_size + t2_size; i++) {
@@ -707,8 +804,8 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
               vector<vector<int>> bal_indices, int ia[], int ja[], double ar[], unsigned short int &n, double &prec,
               vector<bool> &U, vector<bool> &U2, unsigned int &sumt, unsigned short int &sumt2, vector<bool> &t,
               vector<bool> &t2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2, int &t_size, int &t2_size,
-              int &rank, vector<vector<bool>> &Asettled, vector<double> &settled_values, vector<bool> &unsettled,
-              vector<unsigned int> &T_coord, unsigned int &s, double &epsi, vector<double> &v,
+              int &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
+              vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s, double &epsi, double *v,
               vector<unsigned int> &T2_coord, vector<double> &u) {
 
     int i = 0;
@@ -732,8 +829,15 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
 
             sumt++;
             if (binrank(Arref, J, Atight[i], n)) {
+                if (disp) {
+                    cout << "Rank increased to " << rank + 1 << " with " << T_coord[i] + 1 << " (and " << s - T_coord[i]
+                         << ") getting settled." << endl;
+                }
                 if (rank == n - 1) {
                     rank++;
+                    if (disp) {
+                        cout << "Rank condition satisfied!" << endl;
+                    }
                     return;
                 }
                 rowechform(Arref, J, Atight[i], n, rank);
@@ -745,6 +849,10 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
 
                 const int col_index = i + 1;
                 glp_set_col_bnds(lp, col_index, GLP_FR, 0.0, 0.0);
+
+                if (disp) {
+                    cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
+                }
             } else {
                 for (unsigned short int j = 0; j < n; j++) {
                     if (Atight[i][j]) {
@@ -764,6 +872,13 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
                 }
                 unsettled[T_coord[i]] = false;
                 unsettled[s - 1 - T_coord[i]] = false;
+                if (disp) {
+                    cout << "SETTLED: " << T_coord[i] + 1 << " at " << v[T_coord[i]] - epsi << endl;
+                }
+                if (disp) {
+                    cout << T_coord[i] + 1 << " and " << s - T_coord[i] << " got settled without rank increase."
+                         << endl;
+                }
             }
         }
         i++;
@@ -780,8 +895,15 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
             glp_set_obj_coef(lp, sr_obj_index, sr_obj_coef - 1);
 
             if (binrank(Arref, J, Atight2[i], n)) {
+                if (disp) {
+                    cout << "Rank increased to " << rank + 1 << " with " << T2_coord[i] + 1 << " (and "
+                         << s - T2_coord[i] << ") getting settled." << endl;
+                }
                 if (rank == n - 1) {
                     rank++;
+                    if (disp) {
+                        cout << "Rank condition satisfied!" << endl;
+                    }
                     return;
                 }
                 rowechform(Arref, J, Atight2[i], n, rank);
@@ -793,6 +915,10 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
 
                 const int col_index = i + t_size + 1;
                 glp_set_col_bnds(lp, col_index, GLP_FR, 0.0, 0.0);
+
+                if (disp) {
+                    cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
+                }
             } else {
                 for (unsigned short int j = 0; j < n; j++) {
                     if (Atight2[i][j]) {
@@ -812,6 +938,13 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
                 }
                 unsettled[T2_coord[i]] = false;
                 unsettled[s - 1 - T2_coord[i]] = false;
+                if (disp) {
+                    cout << "SETTLED: " << T2_coord[i] + 1 << " at " << v[T2_coord[i]] << endl;
+                }
+                if (disp) {
+                    cout << T2_coord[i] + 1 << " and " << s - T2_coord[i] << " got settled without rank increase."
+                         << endl;
+                }
             }
         }
         i++;

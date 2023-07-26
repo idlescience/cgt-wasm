@@ -7,9 +7,5 @@ int main() {
     PD(v, x, n);
     for (unsigned int i = 0; i < n; i++)
         cout << fixed << setprecision(17) << x[i] << endl;
-    cout << "Press 0 then Enter to quit: ";
-    double quit;
-    cin >> quit;
-    cin.get();
     return 0;
 }

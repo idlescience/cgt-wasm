@@ -3,6 +3,7 @@ project(nucleolus)
 
 add_definitions(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-s EXIT_RUNTIME=1")
 
 set(
         INCLUDE_DIRECTORIES
@@ -20,6 +21,7 @@ link_directories(${LIB_DIRECTORIES})
 
 set(
         SOURCE_FILES
+        main.cpp
         lib/common.h
         lib/common.cpp
         lib/nucleolus.h
