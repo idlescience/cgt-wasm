@@ -18,7 +18,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Emscripten")
     )
     set(
             LIB_DIRECTORIES
-            /home/secci/projects/glpk-wasm/libs
+            /home/secci/projects/glpk-wasm/lib
     )
 else ()
     set(
@@ -27,7 +27,7 @@ else ()
     )
     set(
             LIB_DIRECTORIES
-            /home/secci/projects/glpk/libs
+            /home/secci/projects/glpk/lib
     )
 endif ()
 
