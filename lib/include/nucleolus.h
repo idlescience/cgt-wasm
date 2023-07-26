@@ -1,6 +1,6 @@
 #include "common.h"
 
-extern "C" void PD(double *v_orig, double *x_orig, unsigned short int n);
+extern "C" void primal_dual(double *v_orig, double *x_orig, unsigned short int n);
 
 void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned short int &n, vector<vector<bool>> &A,
                double *x, double *v, double &epsi, double &prec, vector<vector<double>> &Arref, vector<bool> &J,

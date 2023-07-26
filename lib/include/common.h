@@ -6,7 +6,10 @@
 #include <ctime>
 #include <fstream>
 #include <glpk.h>
+
+#ifdef EMSCRIPTEN
 #include <emscripten.h>
+#endif
 
 using namespace std;
 

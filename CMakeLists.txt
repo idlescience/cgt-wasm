@@ -3,7 +3,6 @@ project(nucleolus)
 
 add_definitions(-std=c++17)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-s EXIT_RUNTIME=1")
 
 set(
         INCLUDE_DIRECTORIES
@@ -19,15 +18,8 @@ set(
 
 link_directories(${LIB_DIRECTORIES})
 
-set(
-        SOURCE_FILES
-        main.cpp
-        lib/common.h
-        lib/common.cpp
-        lib/nucleolus.h
-        lib/nucleolus.cpp
-)
+enable_testing()
 
-add_executable(nucleolus ${SOURCE_FILES})
+add_subdirectory(lib)
 
-target_link_libraries(nucleolus glpk)
+add_subdirectory(test)

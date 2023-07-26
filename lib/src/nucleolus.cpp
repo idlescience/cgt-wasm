@@ -1,6 +1,11 @@
 #include "nucleolus.h"
 
-extern "C" EMSCRIPTEN_KEEPALIVE void PD(double *v, double *x, unsigned short int n) {
+extern "C"
+
+#ifdef EMSCRIPTEN
+EMSCRIPTEN_KEEPALIVE
+#endif
+void primal_dual(double *v, double *x, unsigned short int n) {
     unsigned int s = (int) (pow(2, n) - 2);
     unsigned short int iter = 0;
     unsigned int sr = 0;
