@@ -1,4 +1,4 @@
-#include "nucleolus.h"
+#include "primal_dual.h"
 
 extern "C"
 
@@ -37,13 +37,12 @@ void primal_dual(double *v, double *x, unsigned short int n) {
     Arref[0] = vector<double>(n, 1);
     vector<bool> J(n, true);
     J[0] = false;
-    int rank = 1;
+    unsigned short rank = 1;
     vector<vector<bool>> Asettled(n, vector<bool>(n, false));
     vector<double> settled_values(n, 0);
     settled_values[0] = v[s];
     double epsi = 0;
 
-    // GLPK
     glp_prob *lp;
     int ia[1 + 1000] = {0};
     int ja[1 + 1000] = {0};
@@ -236,7 +235,7 @@ void primal_dual(double *v, double *x, unsigned short int n) {
 
 void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned short int &n, vector<vector<bool>> &A,
                double *x, double *v, double &epsi, double &prec, vector<vector<double>> &Arref, vector<bool> &J,
-               int &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
+               unsigned short &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
                unsigned short int &iter, unsigned int &sr, vector<bool> &unsettled_p, vector<double> &singleton_bounds,
                bool &nlsu) {
 
@@ -540,7 +539,7 @@ void iteration(vector<bool> &unsettled, unsigned int &s, double &xS, unsigned sh
 
 void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2,
                 vector<vector<double>> &Arref, vector<bool> &J, double &prec, unsigned short int &n, int &t_size,
-                int &t2_size, int &rank, bool &disp, vector<vector<bool>> &Asettled, unsigned int &sr,
+                int &t2_size, unsigned short &rank, bool &disp, vector<vector<bool>> &Asettled, unsigned int &sr,
                 vector<double> &settled_values, vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s,
                 double &epsi, double *v, vector<unsigned int> &T2_coord) {
     // GLPK
@@ -809,7 +808,7 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, glp_prob *lp, int 
               vector<vector<int>> bal_indices, int ia[], int ja[], double ar[], unsigned short int &n, double &prec,
               vector<bool> &U, vector<bool> &U2, unsigned int &sumt, unsigned short int &sumt2, vector<bool> &t,
               vector<bool> &t2, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2, int &t_size, int &t2_size,
-              int &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
+              unsigned short &rank, bool &disp, vector<vector<bool>> &Asettled, vector<double> &settled_values,
               vector<bool> &unsettled, vector<unsigned int> &T_coord, unsigned int &s, double &epsi, double *v,
               vector<unsigned int> &T2_coord, vector<double> &u) {
 

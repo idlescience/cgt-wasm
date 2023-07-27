@@ -1,7 +1,8 @@
 set(
         LIB_FILES
         src/common.cpp
-        src/nucleolus.cpp
+        src/primal_dual.cpp
+        src/bnf.cpp
 )
 
 add_library(nucleolus SHARED ${LIB_FILES})

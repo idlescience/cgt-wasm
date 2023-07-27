@@ -1,4 +1,4 @@
-#include "lib/include/nucleolus.h"
+#include "lib/include/primal_dual.h"
 
 int main() {
     unsigned short int n = 3;
