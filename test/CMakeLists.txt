@@ -6,6 +6,7 @@ target_include_directories(doctest INTERFACE ${DOCTEST_INCLUDE_DIR})
 set(
         TEST_FILES
         src/nucleolus_test.cpp
+        src/gen_game.cpp
 )
 
 add_executable (tests ${TEST_FILES})
