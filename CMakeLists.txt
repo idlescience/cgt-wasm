@@ -11,6 +11,14 @@ else ()
     message(" * C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
 
+if (CMAKE_CURRENT_SOURCE_DIR MATCHES "/workspaces.*$")
+    message(" * Github workspace detected")
+    set(CMAKE_WORKSPACE "github")
+else ()
+    set(CMAKE_WORKSPACE "local")
+    message(" * Local workspace detected")
+endif ()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Emscripten")
     set(
             INCLUDE_DIRECTORIES
@@ -21,14 +29,25 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Emscripten")
             /home/secci/projects/glpk-wasm/lib
     )
 else ()
-    set(
-            INCLUDE_DIRECTORIES
-            /home/secci/projects/glpk/include
-    )
-    set(
-            LIB_DIRECTORIES
-            /home/secci/projects/glpk/lib
-    )
+    if (CMAKE_WORKSPACE STREQUAL "github")
+        set(
+                INCLUDE_DIRECTORIES
+                /workspaces/nucleolus-wasm/vendor/glpk/include
+        )
+        set(
+                LIB_DIRECTORIES
+                /workspaces/nucleolus-wasm/vendor/glpk/lib
+        )
+    else ()
+        set(
+                INCLUDE_DIRECTORIES
+                /home/secci/projects/glpk/include
+        )
+        set(
+                LIB_DIRECTORIES
+                /home/secci/projects/glpk/lib
+        )
+    endif ()
 endif ()
 
 include_directories(${INCLUDE_DIRECTORIES})
