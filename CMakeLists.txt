@@ -54,6 +54,8 @@ include_directories(${INCLUDE_DIRECTORIES})
 
 link_directories(${LIB_DIRECTORIES})
 
+include(CTest)
+
 enable_testing()
 
 add_subdirectory(lib)

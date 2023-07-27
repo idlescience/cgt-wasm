@@ -4,9 +4,10 @@ struct game {
     int seed;
     int n;
     int type;
+    std::string name;
     vector<double> payoff;
 };
-static const game GAMES[] = {{461125, 5, 1,
+static const game GAMES[] = {{461125, 5, 1, "Type 1 N 5",
                               {60.00000000000002132, 112.99999999999998579, 37.50000000000000000, 145.50000000000000000,
                                106.99999999999998579}}};
 #endif
