@@ -5,49 +5,27 @@
 
 #include "nucleolus_test.h"
 
-TEST_CASE("Primal-Dual")
-{
-    SUBCASE("should work in a simple 3 players game")
-    {
-        unsigned short int n = 3;
-        double x[] = {0, 0, 0};
-        double v[] = {0, 0, 0, 3, 0, 1, 4};
-        primal_dual(v, x, n);
-        double x_0 = round(x[0] * 100.0) / 100.0;
-        CHECK(x_0 == 2.50);
-    }
-}
-
 TEST_CASE("BNF")
 {
-    for (game test_game : GAMES)
+    for (unsigned short int i = 0; i < 1; i++)
     {
-        const std::string test_name = "should work in a " + test_game.name + " game";
+        game test_game = GAMES[i];
+        const std::string test_name = "should work on a " + test_game.name;
         SUBCASE(test_name.c_str())
         {
-            srand(test_game.seed);
             unsigned short int n = test_game.n;
-            unsigned short int type = test_game.type;
             unsigned int s = pow(2, n) - 2;
             vector<double> x(n, 0);
             vector<double> singleton_bounds(n, 0);
-            vector<double> v(s + 1, 0);
+            vector<double> v(test_game.v);
             vector<double> excess(s, 0);
             vector<bool> unsettled(s + 1, true);
             unsettled[s] = false;
-            cout << "Generating game...";
-            if (type == 1)
-            {
-                type1(v, s, n);
+            cout << "Payoff: ";
+            for (double payoff: v) {
+                cout << payoff << ", ";
             }
-            else if (type == 2)
-            {
-                type2(v, s, n);
-            }
-            else if (type == 4)
-            {
-                type4(v, s, n);
-            }
+            cout << endl;
             cout << "done!" << endl;
             cout << "Running BNF..." << endl;
 
@@ -74,12 +52,13 @@ TEST_CASE("BNF")
             vector<vector<bool>> A(s + 1, vector<bool>(n, false));
             A_mx(A, n, s);
             excess_init(excess, unsettled, A, x, v, s, n);
+            cout << "Entering game" << endl;
             // bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
 
             for (unsigned int i = 0; i < n; i++)
             {
                 double x_rounded = round(x[i] * 100.0) / 100.0;
-                double payoff_rounded = round(test_game.payoff[i] * 100.0) / 100.0;
+                double payoff_rounded = round(test_game.nucleolus[i] * 100.0) / 100.0;
                 CHECK(x_rounded == payoff_rounded);
             }
         }

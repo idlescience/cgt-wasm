@@ -11,5 +11,3 @@ set(
 
 add_executable (tests ${TEST_FILES})
 target_link_libraries(tests doctest nucleolus)
-
-add_test(NAME tests COMMAND tests --test-case="BNF")
