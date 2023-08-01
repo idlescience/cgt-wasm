@@ -53,7 +53,7 @@ TEST_CASE("BNF")
             A_mx(A, n, s);
             excess_init(excess, unsettled, A, x, v, s, n);
             cout << "Entering game" << endl;
-            // bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
+            bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
 
             for (unsigned int i = 0; i < n; i++)
             {
