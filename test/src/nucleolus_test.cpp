@@ -7,9 +7,8 @@
 
 TEST_CASE("BNF")
 {
-    for (unsigned short int i = 0; i < 1; i++)
+    for (auto test_game: GAMES)
     {
-        game test_game = GAMES[i];
         const std::string test_name = "should work on a " + test_game.name;
         SUBCASE(test_name.c_str())
         {
@@ -32,7 +31,7 @@ TEST_CASE("BNF")
             bool disp = true;
             bool nlsu = false;
             double impu = 0;
-            double prec = pow(10, -6);
+            double prec = pow(10, -3);
             unsigned short int iter = 0;
             unsigned int piv = 0;
             unsigned int sr = 0;
@@ -57,9 +56,7 @@ TEST_CASE("BNF")
 
             for (unsigned int i = 0; i < n; i++)
             {
-                double x_rounded = round(x[i] * 100.0) / 100.0;
-                double payoff_rounded = round(test_game.nucleolus[i] * 100.0) / 100.0;
-                CHECK(x_rounded == payoff_rounded);
+                CHECK(abs(x[i] - test_game.nucleolus[i]) <= prec);
             }
         }
     }
