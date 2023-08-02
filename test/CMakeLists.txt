@@ -11,3 +11,11 @@ set(
 
 add_executable (tests ${TEST_FILES})
 target_link_libraries(tests doctest nucleolus)
+
+set_target_properties(
+  tests
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
+)
