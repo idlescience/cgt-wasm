@@ -19,4 +19,4 @@ set_target_properties(
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
 )
 
-add_test(tests tests)
+add_test(tests ${CMAKE_SOURCE_DIR}/public/tests)
