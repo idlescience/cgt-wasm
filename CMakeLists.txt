@@ -14,6 +14,9 @@ endif ()
 if (CMAKE_CURRENT_SOURCE_DIR MATCHES "/workspaces.*$")
     message(" * Github workspace detected")
     set(CMAKE_WORKSPACE "github")
+elseif (CMAKE_CURRENT_SOURCE_DIR MATCHES "/home/runner/work.*$")
+    message(" * Github runner detected")
+    set(CMAKE_WORKSPACE "github")
 else ()
     set(CMAKE_WORKSPACE "local")
     message(" * Local workspace detected")
@@ -32,11 +35,11 @@ else ()
     if (CMAKE_WORKSPACE STREQUAL "github")
         set(
                 INCLUDE_DIRECTORIES
-                /workspaces/nucleolus-wasm/vendor/glpk/include
+                ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glpk/include
         )
         set(
                 LIB_DIRECTORIES
-                /workspaces/nucleolus-wasm/vendor/glpk/lib
+                ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glpk/lib
         )
     else ()
         set(
