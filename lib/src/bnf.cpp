@@ -21,19 +21,20 @@ void bnf(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &exc
 			cout << x[i] << endl;
 		}
 	}
+	
 	vector<double> d(n, 0);
 	double epsi = 0;
 	double epsi_old = -DBL_MAX;
 	while (rank < n)
 	{
-		pivot(epsi, s, excess, prec, n, A, Arref, J, unsettled, rank, d, x, disp, Asettled, piv, sr, iter, unsettled_p,
-			  singleton_bounds, epsi_old, nlsu);
+		pivot(epsi, s, excess, prec, n, A, Arref, J, unsettled, rank, d, x, disp, Asettled, piv, sr, iter, unsettled_p, singleton_bounds, epsi_old, nlsu);
 	}
 	t = cpuTime() - t1;
 	if (disp)
 	{
 		cout << "BNF finished!" << endl;
 		cout << "The nucleolus solution:" << endl;
+
 		for (unsigned short int i = 0; i < n; i++)
 		{
 			cout << x[i] << endl;
