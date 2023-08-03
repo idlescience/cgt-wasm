@@ -1,7 +1,6 @@
 set(
         LIB_FILES
         src/common.cpp
-        src/primal_dual.cpp
         src/bnf.cpp
 )
 

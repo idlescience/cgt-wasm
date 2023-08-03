@@ -30,23 +30,29 @@ void bnf(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &exc
 			  singleton_bounds, epsi_old, nlsu);
 	}
 	t = cpuTime() - t1;
-	cout << "BNF finished!" << endl;
-	cout << "The nucleolus solution:" << endl;
-	for (unsigned short int i = 0; i < n; i++)
+	if (disp)
 	{
-		cout << x[i] << endl;
+		cout << "BNF finished!" << endl;
+		cout << "The nucleolus solution:" << endl;
+		for (unsigned short int i = 0; i < n; i++)
+		{
+			cout << x[i] << endl;
+		}
+
+		cout << "Time needed: " << t << " seconds" << endl;
+		cout << "Iterations needed: " << iter << endl;
+		cout << "Pivots needed: " << piv << endl;
+		cout << "Subroutine solves needed: " << sr << endl;
 	}
-	cout << "Time needed: " << t << " seconds" << endl;
-	cout << "Iterations needed: " << iter << endl;
-	cout << "Pivots needed: " << piv << endl;
-	cout << "Subroutine solves needed: " << sr << endl;
 }
 
 void pivot(double &epsi, unsigned int &s, vector<double> &excess, double &prec, unsigned short int &n, vector<vector<bool>> &A, vector<vector<double>> &Arref, vector<bool> &J, vector<bool> &unsettled, unsigned short int &rank, vector<double> &d, vector<double> &x, bool &disp, vector<vector<bool>> &Asettled, unsigned int &piv, unsigned int &sr_count, unsigned short int &iter, vector<bool> &unsettled_p, vector<double> &singleton_bounds, double &epsi_old, bool &nlsu)
 {
 	vec_min_uns(epsi, excess, unsettled, s);
 	if (disp)
+	{
 		cout << "Epsilon: " << epsi << endl;
+	}
 	vector<bool> T(s, false);
 	vector<unsigned int> T_coord(0, 0);
 	vector<bool> T2(n, false);
@@ -197,6 +203,7 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
 	unsigned int sumt2 = 0;
 	vector<bool> t2(tight2_size, false);
 
+	glp_term_out(GLP_OFF);
 	glp_prob *lp;
 	int ia[1 + 1000] = {0};
 	int ja[1 + 1000] = {0};
@@ -606,7 +613,7 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, u
 
 void imprdir(vector<double> &d, unsigned short int &n, unsigned int &t_size, unsigned short int &t2_size, vector<vector<bool>> &Atight, vector<vector<bool>> &Atight2, vector<bool> &U, vector<bool> &U2, unsigned short int &rank, vector<vector<bool>> &Asettled, bool &disp)
 {
-
+	glp_term_out(GLP_OFF);
 	glp_prob *lp;
 	int ia[1 + 1000] = {0};
 	int ja[1 + 1000] = {0};

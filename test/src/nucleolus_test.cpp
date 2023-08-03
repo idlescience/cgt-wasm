@@ -9,7 +9,7 @@ TEST_CASE("BNF")
 {
     for (auto test_game: GAMES)
     {
-        const std::string test_name = "should work on a " + test_game.name;
+        const std::string test_name = "should work on " + test_game.name;
         SUBCASE(test_name.c_str())
         {
             unsigned short int n = test_game.n;
@@ -20,15 +20,8 @@ TEST_CASE("BNF")
             vector<double> excess(s, 0);
             vector<bool> unsettled(s + 1, true);
             unsettled[s] = false;
-            cout << "Payoff: ";
-            for (double payoff: v) {
-                cout << payoff << ", ";
-            }
-            cout << endl;
-            cout << "done!" << endl;
-            cout << "Running BNF..." << endl;
 
-            bool disp = true;
+            bool disp = false;
             bool nlsu = false;
             double impu = 0;
             double prec = pow(10, -3);
@@ -51,7 +44,6 @@ TEST_CASE("BNF")
             vector<vector<bool>> A(s + 1, vector<bool>(n, false));
             A_mx(A, n, s);
             excess_init(excess, unsettled, A, x, v, s, n);
-            cout << "Entering game" << endl;
             bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
 
             for (unsigned int i = 0; i < n; i++)
