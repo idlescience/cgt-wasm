@@ -4,3 +4,6 @@ build/
 build/*
 .idea/
 .idea/*
+public/
+public/*
+!public/.gitkeep
