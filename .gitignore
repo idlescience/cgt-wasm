@@ -7,3 +7,4 @@ build/*
 public/
 public/*
 !public/.gitkeep
+!public/index.html
