@@ -64,3 +64,7 @@ enable_testing()
 add_subdirectory(lib)
 
 add_subdirectory(test)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Emscripten")
+    add_subdirectory(module)
+endif ()
