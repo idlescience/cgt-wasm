@@ -42,5 +42,6 @@ vector<double> bnf_run(vector<double> v_in, unsigned short int n_in)
 
 EMSCRIPTEN_BINDINGS(bnf_module)
 {
+    register_vector<double>("DoubleList");
     emscripten::function("bnf_run", &bnf_run);
 }
