@@ -42,6 +42,6 @@ vector<double> run(vector<double> v_in, unsigned short int n_in)
 
 EMSCRIPTEN_BINDINGS(nucleolus)
 {
-    register_vector<double>("DoubleList");
+    register_vector<double>("DoubleVector");
     emscripten::function("run", &run);
 }
