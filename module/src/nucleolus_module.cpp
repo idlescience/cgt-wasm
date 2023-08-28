@@ -1,8 +1,8 @@
-#include "bnf_module.h"
+#include "nucleolus_module.h"
 
 using namespace emscripten;
 
-vector<double> bnf_run(vector<double> v_in, unsigned short int n_in)
+vector<double> run(vector<double> v_in, unsigned short int n_in)
 {
     unsigned short int n = n_in;
     unsigned int s = pow(2, n) - 2;
@@ -40,8 +40,8 @@ vector<double> bnf_run(vector<double> v_in, unsigned short int n_in)
     return x;
 }
 
-EMSCRIPTEN_BINDINGS(bnf_module)
+EMSCRIPTEN_BINDINGS(nucleolus)
 {
     register_vector<double>("DoubleList");
-    emscripten::function("bnf_run", &bnf_run);
+    emscripten::function("run", &run);
 }
