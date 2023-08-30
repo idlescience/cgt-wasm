@@ -46,14 +46,6 @@ excess_init(vector<double> &exc, vector<bool> &unsettled, vector<vector<bool>> &
 void excess_init_sg(vector<double> &exc, vector<bool> &unsettled, vector<vector<bool>> &A, vector<double> &x,
                     vector<bool> &v, unsigned int &s, unsigned short int &n);
 
-void
-excess_init_mem(vector<double> &exc, vector<bool> &unsettled, vector<bool> &a, vector<double> &x, vector<double> &v,
-                unsigned int &s, unsigned short int &n);
-
-void
-excess_init_sg_mem(vector<double> &exc, vector<bool> &unsettled, vector<bool> &a, vector<double> &x, vector<bool> &v,
-                   unsigned int &s, unsigned short int &n);
-
 void vec_min_uns(double &m, vector<double> &x, vector<bool> &unsettled, unsigned int &s);
 
 void sum_vecb(unsigned int &s, vector<bool> &x);

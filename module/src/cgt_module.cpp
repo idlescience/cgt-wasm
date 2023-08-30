@@ -1,8 +1,8 @@
-#include "nucleolus_module.h"
+#include "cgt_module.h"
 
 using namespace emscripten;
 
-vector<double> run(vector<double> v_in, unsigned short int n_in)
+vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
 {
     unsigned short int n = n_in;
     unsigned int s = pow(2, n) - 2;
@@ -36,12 +36,12 @@ vector<double> run(vector<double> v_in, unsigned short int n_in)
     vector<vector<bool>> A(s + 1, vector<bool>(n, false));
     A_mx(A, n, s);
     excess_init(excess, unsettled, A, x, v, s, n);
-    bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
+    nucleolus(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
     return x;
 }
 
 EMSCRIPTEN_BINDINGS(nucleolus)
 {
     register_vector<double>("DoubleVector");
-    emscripten::function("run", &run);
+    emscripten::function("nucleolus", &nucleolus_run);
 }

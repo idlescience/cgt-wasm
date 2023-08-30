@@ -1,17 +1,17 @@
 set(
         MODULE_FILES
-        src/nucleolus_module.cpp
+        src/cgt_module.cpp
 )
 
-add_executable (nucleolus_module ${MODULE_FILES})
-target_link_libraries(nucleolus_module nucleolus embind)
+add_executable (cgt_module ${MODULE_FILES})
+target_link_libraries(cgt_module cgt embind)
 
 set(MODULE_INCLUDE_DIR include)
 
-target_include_directories(nucleolus_module PUBLIC ${MODULE_INCLUDE_DIR})
+target_include_directories(cgt_module PUBLIC ${MODULE_INCLUDE_DIR})
 
 set_target_properties(
-  nucleolus_module
+  cgt_module
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"

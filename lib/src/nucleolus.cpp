@@ -1,6 +1,6 @@
-#include "bnf.h"
+#include "nucleolus.h"
 
-void bnf(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled, unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t, vector<double> &x, vector<vector<bool>> &A, double &t1, vector<double> &singleton_bounds, bool &nlsu)
+void nucleolus(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled, unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t, vector<double> &x, vector<vector<bool>> &A, double &t1, vector<double> &singleton_bounds, bool &nlsu)
 {
 	vector<bool> unsettled_p(n, true);
 	vector<vector<double>> Arref(n, vector<double>(n, 0));
@@ -32,7 +32,7 @@ void bnf(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &exc
 	t = cpuTime() - t1;
 	if (disp)
 	{
-		cout << "BNF finished!" << endl;
+		cout << "Algorithm finished!" << endl;
 		cout << "The nucleolus solution:" << endl;
 
 		for (unsigned short int i = 0; i < n; i++)

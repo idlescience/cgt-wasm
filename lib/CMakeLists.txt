@@ -1,19 +1,19 @@
 set(
         LIB_FILES
         src/common.cpp
-        src/bnf.cpp
+        src/nucleolus.cpp
 )
 
-add_library(nucleolus STATIC ${LIB_FILES})
+add_library(cgt STATIC ${LIB_FILES})
 
-target_link_libraries(nucleolus glpk)
+target_link_libraries(cgt glpk)
 
 set(NUCLEOLUS_INCLUDE_DIR include)
 
-target_include_directories(nucleolus PUBLIC ${NUCLEOLUS_INCLUDE_DIR})
+target_include_directories(cgt PUBLIC ${NUCLEOLUS_INCLUDE_DIR})
 
 set_target_properties(
-  nucleolus
+  cgt
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/public"

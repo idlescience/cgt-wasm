@@ -9,7 +9,7 @@ set(
 )
 
 add_executable (tests ${TEST_FILES})
-target_link_libraries(tests doctest nucleolus)
+target_link_libraries(tests doctest cgt)
 
 set_target_properties(
   tests

@@ -3,9 +3,9 @@
 //
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include "nucleolus_test.h"
+#include "cgt_test.h"
 
-TEST_CASE("BNF")
+TEST_CASE("Nucleolus")
 {
     for (auto test_game: GAMES)
     {
@@ -44,7 +44,7 @@ TEST_CASE("BNF")
             vector<vector<bool>> A(s + 1, vector<bool>(n, false));
             A_mx(A, n, s);
             excess_init(excess, unsettled, A, x, v, s, n);
-            bnf(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
+            nucleolus(disp, n, s, excess, prec, unsettled, iter, piv, sr, t, x, A, t1, singleton_bounds, nlsu);
 
             for (unsigned int i = 0; i < n; i++)
             {

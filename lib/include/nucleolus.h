@@ -1,7 +1,7 @@
 #include "common.h"
 
 void
-bnf(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled,
+nucleolus(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled,
     unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t, vector<double> &x,
     vector<vector<bool>> &A, double &t1, vector<double> &singleton_bounds, bool &nlsu);
 
@@ -30,21 +30,6 @@ void subr_upd(vector<vector<double>> &Arref, vector<bool> &J, unsigned int &i, u
               vector<unsigned int> &T2_coord, double &epsi_old, double &epsi, vector<bool> &unsettled_p, bool &settled,
               glp_prob *lp, int ia[], int ja[], double ar[], int &ia_index, int &q_constr_index,
               vector<int> &q_indices);
-
-void BNF_mem(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec,
-             vector<bool> &unsettled, unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t,
-             vector<double> &x, vector<bool> &a, double &t1, vector<double> &singleton_bounds, bool &nlsu);
-
-void
-pivot_mem(double &epsi, unsigned int &s, vector<double> &excess, double &prec, unsigned short int &n, vector<bool> &a,
-          vector<vector<double>> &Arref, vector<bool> &J, vector<bool> &unsettled, unsigned short int &rank,
-          vector<double> &d, vector<double> &x, bool &disp, vector<vector<bool>> &Asettled, unsigned int &piv,
-          unsigned int &sr_count, unsigned short int &iter, vector<bool> &unsettled_p, vector<double> &singleton_bounds,
-          double &epsi_old, bool &nlsu);
-
-void step_mem(vector<bool> &T, vector<bool> &T2, vector<bool> &unsettled, vector<bool> &unsettled_p, unsigned int &s,
-              vector<bool> &a, double &epsi, vector<double> &excess, vector<double> &d, unsigned short int &n,
-              vector<double> &x, vector<double> &singleton_bounds, bool &disp, double &prec);
 
 void tight_coal(vector<bool> &T, vector<double> &excess, double &epsi, double &prec, unsigned int &s,
                 vector<unsigned int> &T_coord, vector<bool> &unsettled, unsigned int &t_size);

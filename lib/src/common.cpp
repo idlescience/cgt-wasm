@@ -271,39 +271,6 @@ void excess_init_sg(vector<double> &exc, vector<bool> &unsettled, vector<vector<
     }
 }
 
-void
-excess_init_mem(vector<double> &exc, vector<bool> &unsettled, vector<bool> &a, vector<double> &x, vector<double> &v,
-                unsigned int &s, unsigned short int &n) {
-    for (unsigned int i = 0; i < s; i++) {
-        if (unsettled[i]) {
-            exc[i] = -v[i];
-            de2bi(i, a, n);
-            for (unsigned short int j = 0; j < n; j++) {
-                if (a[j])
-                    exc[i] += x[j];
-            }
-        } else
-            exc[i] = DBL_MAX;
-    }
-}
-
-void
-excess_init_sg_mem(vector<double> &exc, vector<bool> &unsettled, vector<bool> &a, vector<double> &x, vector<bool> &v,
-                   unsigned int &s, unsigned short int &n) {
-    for (unsigned int i = 0; i < s; i++) {
-        if (unsettled[i]) {
-            if (v[i])
-                exc[i] = -1;
-            de2bi(i, a, n);
-            for (unsigned short int j = 0; j < n; j++) {
-                if (a[j])
-                    exc[i] += x[j];
-            }
-        } else
-            exc[i] = DBL_MAX;
-    }
-}
-
 void vec_min_uns(double &m, vector<double> &x, vector<bool> &unsettled, unsigned int &s) {
     m = DBL_MAX;
     for (unsigned int i = 0; i < s; i++) {

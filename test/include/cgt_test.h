@@ -2,5 +2,5 @@
 #include <cstdlib>
 #include "doctest.h"
 #include "games.h"
-#include "bnf.h"
-#include "primal_dual.h"
+#include "nucleolus.h"
+#include "shapley.h"
