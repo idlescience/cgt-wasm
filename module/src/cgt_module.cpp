@@ -40,8 +40,44 @@ vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
     return x;
 }
 
-EMSCRIPTEN_BINDINGS(nucleolus)
+vector<double> shapley_run(vector<double> v_in, unsigned short int n_in)
+{
+    using namespace Shapley;
+
+    class ModulePlayer : public Player
+    {
+    public:
+        explicit ModulePlayer(int index, const vector<double>& v) : position(index), v_ref(v) {}
+        double getContribution() const override
+        {
+            return v_ref[1 << position];
+        }
+
+    protected:
+        int position;
+        const vector<double>& v_ref;
+    };
+
+    class ModuleCharacteristicFunction : public CharacteristicFunction<ModulePlayer>
+    {
+    public:
+        double getValue(const Coalition<ModulePlayer> &coalition) const override
+        {
+            double value = 0.0;
+            // Find largest taxi fare of any coalition member.
+            for (const ModulePlayer *member : coalition.getMembers())
+            {
+                if (member->getContribution() > value)
+                    value = member->getContribution();
+            }
+            return value;
+        }
+    };
+}
+
+EMSCRIPTEN_BINDINGS(cgt)
 {
     register_vector<double>("DoubleVector");
     emscripten::function("nucleolus", &nucleolus_run);
+    emscripten::function("shapley", &shapley_run);
 }
