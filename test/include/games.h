@@ -1,5 +1,7 @@
 #ifndef _TEST_GAMES_H
 #define _TEST_GAMES_H
+#include <string>
+#include <vector>
 struct game
 {
    int n;
