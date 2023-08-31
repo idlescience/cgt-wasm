@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(ctest) Launch",
+      "type": "cppdbg",
+      "cwd": "${workspaceFolder}",
+      "request": "launch",
+      // Resolved by CMake Tools:
+      "program": "${command:cmake.launchTargetPath}",
+    }
+  ]
+}
