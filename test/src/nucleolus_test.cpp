@@ -1,8 +1,6 @@
 //
 // Created by secci on 25/07/2023.
 //
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-
 #include "cgt_test.h"
 
 TEST_CASE("Nucleolus")
