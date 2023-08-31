@@ -2,6 +2,7 @@ set(
         LIB_FILES
         src/common.cpp
         src/nucleolus.cpp
+        src/ordinal_shapley.cpp
 )
 
 add_library(cgt STATIC ${LIB_FILES})

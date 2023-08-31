@@ -1,4 +1,6 @@
 #include <emscripten/bind.h>
+#include <vector>
+#include <algorithm>
 
 #include "nucleolus.h"
-#include "shapley.h"
+#include "ordinal_shapley.h"

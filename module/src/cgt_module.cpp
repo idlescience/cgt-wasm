@@ -1,6 +1,7 @@
 #include "cgt_module.h"
 
 using namespace emscripten;
+using namespace Shapley;
 
 vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
 {
@@ -42,37 +43,28 @@ vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
 
 vector<double> shapley_run(vector<double> v_in, unsigned short int n_in)
 {
-    using namespace Shapley;
-
-    class ModulePlayer : public Player
+    vector<const OrdinalPlayer *> players;
+    for (unsigned short int i = 0; i < n_in; i++)
     {
-    public:
-        explicit ModulePlayer(int index, const vector<double>& v) : position(index), v_ref(v) {}
-        double getContribution() const override
-        {
-            return v_ref[1 << position];
-        }
+        players.push_back(new OrdinalPlayer(i, v_in));
+    }
 
-    protected:
-        int position;
-        const vector<double>& v_ref;
-    };
+    OrdinalCharacteristicFunction char_func(v_in);
 
-    class ModuleCharacteristicFunction : public CharacteristicFunction<ModulePlayer>
+    map<const OrdinalPlayer *, double> shapley_values_map = compute(players, char_func);
+    vector<double> shapley_values_vec;
+
+    for (auto elem : shapley_values_map)
     {
-    public:
-        double getValue(const Coalition<ModulePlayer> &coalition) const override
-        {
-            double value = 0.0;
-            // Find largest taxi fare of any coalition member.
-            for (const ModulePlayer *member : coalition.getMembers())
-            {
-                if (member->getContribution() > value)
-                    value = member->getContribution();
-            }
-            return value;
-        }
-    };
+        shapley_values_vec.push_back(elem.second);
+    }
+
+    for (unsigned short int i = 0; i < n_in; i++)
+    {
+        delete players[i];
+    }
+
+    return shapley_values_vec;
 }
 
 EMSCRIPTEN_BINDINGS(cgt)
