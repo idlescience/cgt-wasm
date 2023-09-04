@@ -12,7 +12,6 @@ namespace Shapley
     {
     public:
         explicit OrdinalPlayer(int position_in, const std::vector<double> &v);
-        double getContribution() const override;
         int getPosition() const;
 
     protected:

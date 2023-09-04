@@ -8,11 +8,6 @@ namespace Shapley
     OrdinalPlayer::OrdinalPlayer(int position_in, const vector<double> &v)
         : position(position_in), v_ref(v) {}
 
-    double OrdinalPlayer::getContribution() const
-    {
-        return v_ref[1 << position];
-    }
-
     int OrdinalPlayer::getPosition() const
     {
         return position;
@@ -29,7 +24,7 @@ namespace Shapley
             const int player_position = member->getPosition();
             coalition_position = coalition_position | (1 << player_position);
         }
-        const double contribution = v_ref[coalition_position];
+        const double contribution = v_ref[coalition_position - 1];
         return contribution;
     }
 }

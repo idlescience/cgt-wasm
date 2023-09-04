@@ -24,11 +24,6 @@ namespace Shapley
         virtual ~Player()
         {
         }
-
-        /**
-         * @return This player's contribution to the characteristic function.
-         */
-        virtual double getContribution() const = 0;
     };
 
     /**
@@ -235,22 +230,26 @@ namespace Shapley
      */
     template <class PlayerType> static std::vector<Coalition<PlayerType>> powerSet(Coalition<PlayerType> &coalition)
     {
-        int n = coalition.size();
+        const int n = coalition.size();
         std::vector<Coalition<PlayerType>> ans = {};
+        bool *contain = new bool[coalition.size()]{0};
 
         for (int i = 0; i < n; i++)
         {
-            const PlayerType *element = coalition.getPlayerAt(i);
-            int len = ans.size();
-
-            for (int j = 0; j < len; j++)
+            contain[i] = 1;
+            do
             {
-                Coalition<PlayerType> temp = ans[j];
-                temp.add(element);
-                ans.push_back(temp);
-            }
+                Coalition<PlayerType> input;
+                for (int j = 0; j < n; j++)
+                {
+                    if (contain[j])
+                    {
+                        input.add(coalition.getPlayerAt(j));
+                    }
+                }
+                ans.push_back(input);
+            } while (std::prev_permutation(contain, contain + n));
         }
-
         return ans;
     }
 } // namespace Shapley
