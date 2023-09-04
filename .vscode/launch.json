@@ -2,12 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(ctest) Launch",
-      "type": "cppdbg",
-      "cwd": "${workspaceFolder}",
+      "type": "lldb",
       "request": "launch",
-      // Resolved by CMake Tools:
+      "name": "Launch",
       "program": "${command:cmake.launchTargetPath}",
+      "args": [],
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

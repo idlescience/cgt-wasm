@@ -1,13 +1,13 @@
-#include <cmath>
-#include <ctime>
-#include <cstdio>
-#include <cfloat>
 #include <algorithm>
-#include <vector>
-#include <iostream>
+#include <cfloat>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <ctime>
 #include <fstream>
 #include <glpk.h>
-#include <chrono>
+#include <iostream>
+#include <vector>
 
 #ifdef EMSCRIPTEN
 
@@ -23,9 +23,8 @@ void swap_ith_and_firstnz(vector<vector<double>> &rref, vector<int> &nonz, unsig
 
 void rowechform_piv2(vector<vector<double>> &rref, unsigned int &i, unsigned short int &n);
 
-void
-rowechform_piv(vector<vector<double>> &rref, vector<int> &nonz, unsigned int &i, unsigned short int &j, unsigned int &k,
-               unsigned short int &n);
+void rowechform_piv(vector<vector<double>> &rref, vector<int> &nonz, unsigned int &i, unsigned short int &j,
+                    unsigned int &k, unsigned short int &n);
 
 void rowechform_loop(vector<vector<double>> &rref, vector<bool> &J, unsigned int &i, unsigned short int &j,
                      unsigned short int &rank, double &prec, unsigned short int &n);
@@ -39,9 +38,8 @@ void A_mx(vector<vector<bool>> &A, unsigned short int &n, unsigned int &s);
 
 void de2bi(unsigned int &k, vector<bool> &a, unsigned short int &n);
 
-void
-excess_init(vector<double> &exc, vector<bool> &unsettled, vector<vector<bool>> &A, vector<double> &x, vector<double> &v,
-            unsigned int &s, unsigned short int &n);
+void excess_init(vector<double> &exc, vector<bool> &unsettled, vector<vector<bool>> &A, vector<double> &x,
+                 vector<double> &v, unsigned int &s, unsigned short int &n);
 
 void excess_init_sg(vector<double> &exc, vector<bool> &unsettled, vector<vector<bool>> &A, vector<double> &x,
                     vector<bool> &v, unsigned int &s, unsigned short int &n);
