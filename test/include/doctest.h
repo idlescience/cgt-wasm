@@ -584,10 +584,10 @@ namespace doctest
     // - relational operators as free functions - taking const char* as one of the params
     class DOCTEST_INTERFACE String
     {
-      public:
+    public:
         using size_type = DOCTEST_CONFIG_STRING_SIZE_TYPE;
 
-      private:
+    private:
         static DOCTEST_CONSTEXPR size_type len = 24;       //! OCLINT avoid private static members
         static DOCTEST_CONSTEXPR size_type last = len - 1; //! OCLINT avoid private static members
 
@@ -615,7 +615,7 @@ namespace doctest
 
         void copy(const String &other);
 
-      public:
+    public:
         static DOCTEST_CONSTEXPR size_type npos = static_cast<size_type>(-1);
 
         String() noexcept;
@@ -678,7 +678,7 @@ namespace doctest
 
     class DOCTEST_INTERFACE Contains
     {
-      public:
+    public:
         explicit Contains(const String &string);
 
         bool checkWith(const String &other) const;
@@ -852,11 +852,11 @@ namespace doctest
 
         class DOCTEST_INTERFACE StringContains
         {
-          private:
+        private:
             Contains content;
             bool isContains;
 
-          public:
+        public:
             StringContains(const String &str) : content(str), isContains(false)
             {
             }
@@ -1424,7 +1424,7 @@ namespace doctest
 
     template<class T> struct can_use_op : public not_char_pointer<typename decay_array<T>::type> {};
 #endif // DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
-        // clang-format on
+       // clang-format on
 
         struct DOCTEST_INTERFACE TestFailureException
         {
@@ -1451,7 +1451,7 @@ namespace doctest
 
             operator bool() const;
 
-          private:
+        private:
             bool checkFilters();
         };
 
@@ -1567,7 +1567,7 @@ namespace doctest
     inline bool le(const char* lhs, const char* rhs) { return String(lhs) <= String(rhs); }
     inline bool ge(const char* lhs, const char* rhs) { return String(lhs) >= String(rhs); }
 #endif // DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
-        // clang-format on
+       // clang-format on
 
 #define DOCTEST_RELATIONAL_OP(name, op)                                                                                \
     template <typename L, typename R>                                                                                  \
@@ -1929,7 +1929,7 @@ namespace doctest
         template <typename T>
         class ExceptionTranslator : public IExceptionTranslator //! OCLINT destructor of virtual class
         {
-          public:
+        public:
             explicit ExceptionTranslator(String (*translateFunction)(T)) : m_translateFunction(translateFunction)
             {
             }
@@ -1955,7 +1955,7 @@ namespace doctest
                 return false;
             }
 
-          private:
+        private:
             String (*m_translateFunction)(T);
         };
 
@@ -1972,7 +1972,7 @@ namespace doctest
 
             ~ContextScopeBase() override = default;
 
-          protected:
+        protected:
             ContextScopeBase();
             ContextScopeBase(ContextScopeBase &&other) noexcept;
 
@@ -1984,7 +1984,7 @@ namespace doctest
         {
             L lambda_;
 
-          public:
+        public:
             explicit ContextScope(const L &lambda) : lambda_(lambda)
             {
             }
@@ -2127,7 +2127,7 @@ namespace doctest
 
         void parseArgs(int argc, const char *const *argv, bool withDefaults = false);
 
-      public:
+    public:
         explicit Context(int argc = 0, const char *const *argv = nullptr);
 
         Context(const Context &) = delete;
@@ -3773,7 +3773,7 @@ namespace doctest
             std::vector<std::streampos> stack;
             std::stringstream ss;
 
-          public:
+        public:
             std::ostream *push()
             {
                 stack.push_back(ss.tellp());
@@ -3864,7 +3864,7 @@ namespace doctest
                 return static_cast<double>(getCurrentTicks() - m_ticks) / 1000000.0;
             }
 
-          private:
+        private:
             ticks_t m_ticks = 0;
         };
 
@@ -3877,16 +3877,16 @@ namespace doctest
 #if defined(DOCTEST_CONFIG_NO_MULTI_LANE_ATOMICS) || defined(DOCTEST_CONFIG_NO_MULTITHREADING)
         template <typename T> using MultiLaneAtomic = Atomic<T>;
 #else  // DOCTEST_CONFIG_NO_MULTI_LANE_ATOMICS
-        // Provides a multilane implementation of an atomic variable that supports add, sub, load,
-        // store. Instead of using a single atomic variable, this splits up into multiple ones,
-        // each sitting on a separate cache line. The goal is to provide a speedup when most
-        // operations are modifying. It achieves this with two properties:
-        //
-        // * Multiple atomics are used, so chance of congestion from the same atomic is reduced.
-        // * Each atomic sits on a separate cache line, so false sharing is reduced.
-        //
-        // The disadvantage is that there is a small overhead due to the use of TLS, and load/store
-        // is slower because all atomics have to be accessed.
+       // Provides a multilane implementation of an atomic variable that supports add, sub, load,
+       // store. Instead of using a single atomic variable, this splits up into multiple ones,
+       // each sitting on a separate cache line. The goal is to provide a speedup when most
+       // operations are modifying. It achieves this with two properties:
+       //
+       // * Multiple atomics are used, so chance of congestion from the same atomic is reduced.
+       // * Each atomic sits on a separate cache line, so false sharing is reduced.
+       //
+       // The disadvantage is that there is a small overhead due to the use of TLS, and load/store
+       // is slower because all atomics have to be accessed.
         template <typename T> class MultiLaneAtomic
         {
             struct CacheLineAlignedAtomic
@@ -3899,7 +3899,7 @@ namespace doctest
             static_assert(sizeof(CacheLineAlignedAtomic) == DOCTEST_MULTI_LANE_ATOMICS_CACHE_LINE_SIZE,
                           "guarantee one atomic takes exactly one cache line");
 
-          public:
+        public:
             T operator++() DOCTEST_NOEXCEPT
             {
                 return fetch_add(1) + 1;
@@ -3951,7 +3951,7 @@ namespace doctest
                 }
             }
 
-          private:
+        private:
             // Each thread has a different atomic that it operates on. If more than NumLanes threads
             // use this, some will use the same atomic. So performance will degrade a bit, but still
             // everything will work.
@@ -5426,7 +5426,7 @@ namespace doctest
 #ifdef DOCTEST_PLATFORM_LINUX
         class ErrnoGuard
         {
-          public:
+        public:
             ErrnoGuard() : m_oldErrno(errno)
             {
             }
@@ -5435,7 +5435,7 @@ namespace doctest
                 errno = m_oldErrno;
             }
 
-          private:
+        private:
             int m_oldErrno;
         };
         // See the comments in Catch2 for the reasoning behind this implementation:
@@ -5716,7 +5716,7 @@ namespace doctest
                 reset();
             }
 
-          private:
+        private:
             static UINT prev_error_mode_1;
             static int prev_error_mode_2;
             static unsigned int prev_abort_behavior;
@@ -8100,14 +8100,14 @@ namespace {
 
     static class DiscardOStream : public std::ostream
     {
-      private:
+    private:
         class : public std::streambuf
         {
-          private:
+        private:
             // allowing some buffering decreases the amount of calls to overflow
             char buf[1024];
 
-          protected:
+        protected:
             std::streamsize xsputn(const char_type *, std::streamsize count) override
             {
                 return count;
@@ -8120,7 +8120,7 @@ namespace {
             }
         } discardBuf;
 
-      public:
+    public:
         DiscardOStream() : std::ostream(&discardBuf)
         {
         }
@@ -8403,7 +8403,7 @@ namespace {
                     try
                     {
 #endif // DOCTEST_CONFIG_NO_EXCEPTIONS
-                        // MSVC 2015 diagnoses fatalConditionHandler as unused (because reset() is a static method)
+       // MSVC 2015 diagnoses fatalConditionHandler as unused (because reset() is a static method)
                         DOCTEST_MSVC_SUPPRESS_WARNING_WITH_PUSH(4101) // unreferenced local variable
                         FatalConditionHandler fatalConditionHandler;  // Handle signals
                         // execute the test

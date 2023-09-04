@@ -20,7 +20,7 @@ namespace Shapley
      */
     class Player
     {
-      public:
+    public:
         virtual ~Player()
         {
         }
@@ -36,7 +36,7 @@ namespace Shapley
      */
     template <class PlayerType> class Coalition
     {
-      public:
+    public:
         /**
          * Constructs an empty coalition.
          */
@@ -111,7 +111,33 @@ namespace Shapley
             return copy;
         }
 
-      protected:
+        /**
+         * @param index
+         * @return A Coalition with all members not including 'index'.
+         */
+        Coalition getExcept(size_t index)
+        {
+            Coalition copy;
+            for (size_t i = 0; i < members.size(); i++)
+            {
+                if (i != index)
+                {
+                    copy.add(members.at(i));
+                }
+            }
+            return copy;
+        }
+
+        /**
+         * @param index
+         * @return the Player at 'index'.
+         */
+        const PlayerType *getPlayerAt(size_t index)
+        {
+            return members.at(index);
+        }
+
+    protected:
         std::vector<const PlayerType *> members;
     };
 
@@ -120,7 +146,7 @@ namespace Shapley
      */
     template <class PlayerType> class CharacteristicFunction
     {
-      public:
+    public:
         virtual ~CharacteristicFunction()
         {
         }
@@ -130,33 +156,28 @@ namespace Shapley
 
     /** IMPLEMENTATION */
 
-    /**
-     * @tparam PlayerType A class that derives from Shapley::Player.
-     * @param permutation A list of players in a specific order.
-     * @param charFunc A characteristic function for 'PlayerType'.
-     * @return The marginal contribution that this permutation achieves.
-     */
-    template <class PlayerType>
-    static std::map<const PlayerType *, double> getMarginalContribution(
-        const std::vector<const PlayerType *> &permutation, const CharacteristicFunction<PlayerType> &charFunc)
+    static unsigned nChoosek(unsigned n, unsigned k)
     {
-        std::map<const PlayerType *, double> contributions;
-        Coalition<PlayerType> coalition;
-        for (size_t i = 0; i < permutation.size(); i++)
+        if (k > n)
         {
-            const PlayerType *currentPlayer = permutation.at(i);
-            coalition.add(currentPlayer);
-            if (coalition.size() > 1)
-            {
-                contributions[currentPlayer] =
-                    (charFunc.getValue(coalition) - charFunc.getValue(coalition.getUpUntil(i)));
-            }
-            else
-            {
-                contributions[currentPlayer] = (charFunc.getValue(coalition));
-            }
+            return 0;
         }
-        return contributions;
+        if (k * 2 > n)
+        {
+            k = n - k;
+        }
+        if (k == 0)
+        {
+            return 1;
+        }
+
+        int result = n;
+        for (int i = 2; i <= k; ++i)
+        {
+            result *= (n - i + 1);
+            result /= i;
+        }
+        return result;
     }
 
     /**
@@ -170,48 +191,67 @@ namespace Shapley
     static std::map<const PlayerType *, double> compute(const std::vector<const PlayerType *> &players,
                                                         const CharacteristicFunction<PlayerType> &charFunc)
     {
-        // Initiate all player's Shapley values to 0.
-        std::map<const PlayerType *, double> shapleyValues;
-        for (size_t i = 0; i < players.size(); i++)
+        const int n = players.size();
+        std::map<const PlayerType *, double> shapley_values;
+        for (size_t i = 0; i < n; i++)
         {
-            shapleyValues[players.at(i)] = 0.0;
+            shapley_values[players.at(i)] = 0.0;
         }
 
-        // Remember the indices for all players.
-        std::vector<int> positions;
-        for (int i = 0; i < (int)players.size(); i++)
-        {
-            positions.push_back(i);
-        }
+        Coalition<PlayerType> grand_coalition(players);
+        std::vector<Coalition<PlayerType>> power_set = powerSet(grand_coalition);
 
-        // Go through all permutations of our players.
-        double permutationCounter = 0.0;
-        do
+        for (Coalition<PlayerType> &coalition : power_set)
         {
-            // We permute the 'positions' vector, as permuting the players directly doesn't work.
-            std::vector<const PlayerType *> permutation;
-            for (int &position : positions)
+            for (size_t i = 0; i < coalition.size(); i++)
             {
-                permutation.push_back(players.at(position)); // Grab current player permutation.
+                const PlayerType *member = coalition.getPlayerAt(i);
+                if (coalition.size() > 1)
+                {
+                    shapley_values[member] +=
+                        (1 / nChoosek(n, coalition.size())) *
+                        (charFunc.getValue(coalition) - charFunc.getValue(coalition.getExcept(i)));
+                }
+                else
+                {
+                    shapley_values[member] += charFunc.getValue(coalition);
+                }
             }
-            // Find marginal contributions of each player for the current permutation.
-            std::map<const PlayerType *, double> marginalContributions = getMarginalContribution(permutation, charFunc);
-            // Sum them up.
-            for (size_t i = 0; i < players.size(); i++)
-            {
-                shapleyValues[players.at(i)] += marginalContributions[players.at(i)];
-            }
-
-            permutationCounter++;
-        } while (std::next_permutation(positions.begin(), positions.end())); // Keep permuting.
-
-        // Take averages.
-        for (size_t i = 0; i < players.size(); i++)
-        {
-            shapleyValues[players.at(i)] /= permutationCounter;
         }
 
-        return shapleyValues;
+        for (size_t i = 0; i < n; i++)
+        {
+            shapley_values[players.at(i)] /= n;
+        }
+
+        return shapley_values;
+    }
+
+    /**
+     * Retrieves powerset of a coalition.
+     * @tparam PlayerType A class that derives from Shapley::Player.
+     * @param coalition
+     * @return A PlayerType std::vector.
+     */
+    template <class PlayerType> static std::vector<Coalition<PlayerType>> powerSet(Coalition<PlayerType> &coalition)
+    {
+        int n = coalition.size();
+        std::vector<Coalition<PlayerType>> ans = {};
+
+        for (int i = 0; i < n; i++)
+        {
+            const PlayerType *element = coalition.getPlayerAt(i);
+            int len = ans.size();
+
+            for (int j = 0; j < len; j++)
+            {
+                Coalition<PlayerType> temp = ans[j];
+                temp.add(element);
+                ans.push_back(temp);
+            }
+        }
+
+        return ans;
     }
 } // namespace Shapley
 

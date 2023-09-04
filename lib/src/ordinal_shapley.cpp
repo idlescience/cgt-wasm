@@ -22,14 +22,14 @@ namespace Shapley
         : v_ref(v) {}
 
     double OrdinalCharacteristicFunction::getValue(const Coalition<OrdinalPlayer> &coalition) const
-    {
+    {        
         int coalition_position = 0;
         for (const OrdinalPlayer *member : coalition.getMembers())
         {
             const int player_position = member->getPosition();
             coalition_position = coalition_position | (1 << player_position);
         }
-        return v_ref[coalition_position];
+        const double contribution = v_ref[coalition_position];
+        return contribution;
     }
-
 }
