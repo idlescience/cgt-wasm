@@ -4,7 +4,7 @@
 #include "cgt_test.h"
 using namespace Shapley;
 
-TEST_CASE("Power Set")
+TEST_CASE("Power set")
 {
     const game test_game = GAMES[0];
     const std::string test_name = "should work on " + test_game.name;
@@ -21,16 +21,16 @@ TEST_CASE("Power Set")
         }
         Coalition<OrdinalPlayer> grand_coalition(players);
 
-        std::vector<Coalition<OrdinalPlayer>> ans = powerSet(grand_coalition);
+        std::vector<Coalition<OrdinalPlayer>> ans = grand_coalition.power_set();
 
         CHECK(ans.size() == pow(2, n_in) - 1);
-        CHECK(ans.at(0).getPlayerAt(0)->getPosition() == 0);
-        CHECK(ans.at(10).getPlayerAt(0)->getPosition() == 0);
-        CHECK(ans.at(10).getPlayerAt(1)->getPosition() == 1);
+        CHECK(ans.at(0).player_at(0)->position() == 0);
+        CHECK(ans.at(10).player_at(0)->position() == 0);
+        CHECK(ans.at(10).player_at(1)->position() == 1);
     }
 }
 
-TEST_CASE("Power Set")
+TEST_CASE("Power set lexicographically ordened")
 {
     const game test_game = GAMES[0];
     const std::string test_name = "should display lexicographically ordened payoffs" + test_game.name;
@@ -48,15 +48,33 @@ TEST_CASE("Power Set")
         Coalition<OrdinalPlayer> grand_coalition(players);
         OrdinalCharacteristicFunction char_func(v_in);
 
-        std::vector<Coalition<OrdinalPlayer>> ans = powerSet(grand_coalition);
+        std::vector<Coalition<OrdinalPlayer>> ans = grand_coalition.power_set();
 
         ofstream myfile;
         myfile.open("r_coalition.txt");
         for (unsigned int i = 0; i < ans.size(); i++)
         {
             Coalition<OrdinalPlayer> coalition = ans.at(i);
-            const double value = char_func.getValue(coalition);
+            const double value = char_func.value(coalition);
             myfile << value << "\n";
+        }
+        myfile.close();
+    }
+}
+
+TEST_CASE("Dump test games to files")
+{
+    const game test_game = GAMES[0];
+    const std::string test_name = "should display lexicographically ordened payoffs" + test_game.name;
+    SUBCASE(test_name.c_str())
+    {
+        vector<double> v_in(test_game.v);
+
+        ofstream myfile;
+        myfile.open(test_game.name);
+        for (auto elem : v_in)
+        {
+            myfile << elem << "\n";
         }
         myfile.close();
     }

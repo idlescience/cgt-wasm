@@ -12,10 +12,10 @@ namespace Shapley
     {
     public:
         explicit OrdinalPlayer(int position_in, const std::vector<double> &v);
-        int getPosition() const;
+        int position() const;
 
     protected:
-        int position;
+        int m_position;
         const std::vector<double> &v_ref;
     };
 
@@ -23,7 +23,7 @@ namespace Shapley
     {
     public:
         explicit OrdinalCharacteristicFunction(const std::vector<double> &v);
-        double getValue(const Coalition<OrdinalPlayer> &coalition) const override;
+        double value(const Coalition<OrdinalPlayer> &coalition) const override;
 
     protected:
         const std::vector<double> &v_ref;

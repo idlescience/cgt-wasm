@@ -7,6 +7,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include "group.h"
+
+using namespace Group;
+
 /**
  * Implementation of the computation of the game theoretic Shapley value.
  */
@@ -96,7 +100,7 @@ namespace Shapley
          * @param index
          * @return A Coalition with all members up to but not including 'index'.
          */
-        Coalition getUpUntil(size_t index)
+        Coalition until(size_t index)
         {
             Coalition copy;
             for (size_t i = 0; i < index; i++)
@@ -110,7 +114,7 @@ namespace Shapley
          * @param index
          * @return A Coalition with all members not including 'index'.
          */
-        Coalition getExcept(size_t index)
+        Coalition except(size_t index)
         {
             Coalition copy;
             for (size_t i = 0; i < members.size(); i++)
@@ -127,9 +131,38 @@ namespace Shapley
          * @param index
          * @return the Player at 'index'.
          */
-        const PlayerType *getPlayerAt(size_t index)
+        const PlayerType *player_at(size_t index)
         {
             return members.at(index);
+        }
+
+        /**
+         * Retrieves powerset of the coalition.
+         * @return A PlayerType std::vector.
+         */
+        const std::vector<Coalition<PlayerType>> power_set()
+        {
+            const int n = members.size();
+            std::vector<Coalition<PlayerType>> ans = {};
+            bool *contain = new bool[n]{0};
+
+            for (int i = 0; i < n; i++)
+            {
+                contain[i] = 1;
+                do
+                {
+                    Coalition<PlayerType> input;
+                    for (int j = 0; j < n; j++)
+                    {
+                        if (contain[j])
+                        {
+                            input.add(members.at(j));
+                        }
+                    }
+                    ans.push_back(input);
+                } while (std::prev_permutation(contain, contain + n));
+            }
+            return ans;
         }
 
     protected:
@@ -146,45 +179,19 @@ namespace Shapley
         {
         }
 
-        virtual double getValue(const Coalition<PlayerType> &coalition) const = 0;
+        virtual double value(const Coalition<PlayerType> &coalition) const = 0;
     };
-
-    /** IMPLEMENTATION */
-
-    static unsigned nChoosek(unsigned n, unsigned k)
-    {
-        if (k > n)
-        {
-            return 0;
-        }
-        if (k * 2 > n)
-        {
-            k = n - k;
-        }
-        if (k == 0)
-        {
-            return 1;
-        }
-
-        int result = n;
-        for (int i = 2; i <= k; ++i)
-        {
-            result *= (n - i + 1);
-            result /= i;
-        }
-        return result;
-    }
 
     /**
      * Computes each player's Shapley value.
      * @tparam PlayerType A class that derives from Shapley::Player.
      * @param players
-     * @param charFunc A characteristic function for 'PlayerType'.
+     * @param char_func A characteristic function for 'PlayerType'.
      * @return A [Player, Shapley Value]-map.
      */
     template <class PlayerType>
     static std::map<const PlayerType *, double> compute(const std::vector<const PlayerType *> &players,
-                                                        const CharacteristicFunction<PlayerType> &charFunc)
+                                                        const CharacteristicFunction<PlayerType> &char_func)
     {
         const int n = players.size();
         std::map<const PlayerType *, double> shapley_values;
@@ -194,22 +201,21 @@ namespace Shapley
         }
 
         Coalition<PlayerType> grand_coalition(players);
-        std::vector<Coalition<PlayerType>> power_set = powerSet(grand_coalition);
+        std::vector<Coalition<PlayerType>> B = grand_coalition.power_set();
 
-        for (Coalition<PlayerType> &coalition : power_set)
+        for (Coalition<PlayerType> &coalition : B)
         {
             for (size_t i = 0; i < coalition.size(); i++)
             {
-                const PlayerType *member = coalition.getPlayerAt(i);
+                const PlayerType *member = coalition.player_at(i);
                 if (coalition.size() > 1)
                 {
-                    shapley_values[member] +=
-                        (1 / nChoosek(n, coalition.size())) *
-                        (charFunc.getValue(coalition) - charFunc.getValue(coalition.getExcept(i)));
+                    shapley_values[member] += (1 / binomial_coef(n, coalition.size())) *
+                                              (char_func.value(coalition) - char_func.value(coalition.except(i)));
                 }
                 else
                 {
-                    shapley_values[member] += charFunc.getValue(coalition);
+                    shapley_values[member] += char_func.value(coalition);
                 }
             }
         }
@@ -220,37 +226,6 @@ namespace Shapley
         }
 
         return shapley_values;
-    }
-
-    /**
-     * Retrieves powerset of a coalition.
-     * @tparam PlayerType A class that derives from Shapley::Player.
-     * @param coalition
-     * @return A PlayerType std::vector.
-     */
-    template <class PlayerType> static std::vector<Coalition<PlayerType>> powerSet(Coalition<PlayerType> &coalition)
-    {
-        const int n = coalition.size();
-        std::vector<Coalition<PlayerType>> ans = {};
-        bool *contain = new bool[coalition.size()]{0};
-
-        for (int i = 0; i < n; i++)
-        {
-            contain[i] = 1;
-            do
-            {
-                Coalition<PlayerType> input;
-                for (int j = 0; j < n; j++)
-                {
-                    if (contain[j])
-                    {
-                        input.add(coalition.getPlayerAt(j));
-                    }
-                }
-                ans.push_back(input);
-            } while (std::prev_permutation(contain, contain + n));
-        }
-        return ans;
     }
 } // namespace Shapley
 
