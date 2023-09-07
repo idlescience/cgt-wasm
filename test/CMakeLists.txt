@@ -1,10 +1,16 @@
 # Add doctest as an interface library
 set(DOCTEST_INCLUDE_DIR include)
 add_library(doctest INTERFACE)
-target_include_directories(doctest INTERFACE ${DOCTEST_INCLUDE_DIR})
 
+set(JSONCPP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendor/jsoncpp/include)
+set(JSONCPP_SRC ${CMAKE_SOURCE_DIR}/vendor/jsoncpp/src/jsoncpp.cpp)
+
+target_include_directories(doctest INTERFACE ${DOCTEST_INCLUDE_DIR} ${JSONCPP_INCLUDE_DIR})
+
+add_definitions(-D_TEST_FILES_DIR=\"${CMAKE_SOURCE_DIR}/test/files\")
 set(
         TEST_FILES
+        ${JSONCPP_SRC}
         src/main_test.cpp
         src/nucleolus_test.cpp
         src/ordinal_shapley_test.cpp

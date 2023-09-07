@@ -2,6 +2,7 @@
 #define SHAPLEY_LIBRARY_H
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -9,12 +10,12 @@
 
 #include "group.h"
 
-using namespace Group;
+using namespace group;
 
 /**
  * Implementation of the computation of the game theoretic Shapley value.
  */
-namespace Shapley
+namespace shapley
 {
 
     /** REQUIRED CLASSES */
@@ -144,23 +145,23 @@ namespace Shapley
         {
             const int n = members.size();
             std::vector<Coalition<PlayerType>> ans = {};
-            bool *contain = new bool[n]{0};
+            bool *contains = new bool[n]{0};
 
             for (int i = 0; i < n; i++)
             {
-                contain[i] = 1;
+                contains[i] = 1;
                 do
                 {
                     Coalition<PlayerType> input;
                     for (int j = 0; j < n; j++)
                     {
-                        if (contain[j])
+                        if (contains[j])
                         {
                             input.add(members.at(j));
                         }
                     }
                     ans.push_back(input);
-                } while (std::prev_permutation(contain, contain + n));
+                } while (std::prev_permutation(contains, contains + n));
             }
             return ans;
         }
@@ -190,43 +191,60 @@ namespace Shapley
      * @return A [Player, Shapley Value]-map.
      */
     template <class PlayerType>
-    static std::map<const PlayerType *, double> compute(const std::vector<const PlayerType *> &players,
+    static std::map<unsigned short int, double> compute(const std::vector<const PlayerType *> &players,
                                                         const CharacteristicFunction<PlayerType> &char_func)
     {
-        const int n = players.size();
-        std::map<const PlayerType *, double> shapley_values;
-        for (size_t i = 0; i < n; i++)
+        Coalition<PlayerType> grand_coalition(players);
+        const int n = grand_coalition.size();
+
+        std::map<const PlayerType *, double> shapley_values_refs;
+        for (unsigned short int i = 0; i < n; i++)
         {
-            shapley_values[players.at(i)] = 0.0;
+            shapley_values_refs[grand_coalition.player_at(i)] = 0.0;
         }
 
-        Coalition<PlayerType> grand_coalition(players);
         std::vector<Coalition<PlayerType>> B = grand_coalition.power_set();
 
         for (Coalition<PlayerType> &coalition : B)
         {
-            for (size_t i = 0; i < coalition.size(); i++)
+            const unsigned short int s = coalition.size();
+            for (size_t i = 0; i < s; i++)
             {
                 const PlayerType *member = coalition.player_at(i);
-                if (coalition.size() > 1)
+                const double full_value = char_func.value(coalition);
+                const double binomial = binomial_coef(n - 1, s - 1);
+                const double inv_binomial = 1 / binomial;
+                double addend = 0;
+
+                if (s > 1)
                 {
-                    shapley_values[member] += (1 / binomial_coef(n, coalition.size())) *
-                                              (char_func.value(coalition) - char_func.value(coalition.except(i)));
+                    const double skipped_value = char_func.value(coalition.except(i));
+                    const double diff = full_value - skipped_value;
+                    addend = inv_binomial * diff;
+
+                    if (std::isinf(addend))
+                    {
+                        throw std::runtime_error("Shapley value is infinite.");
+                    }
                 }
                 else
                 {
-                    shapley_values[member] += char_func.value(coalition);
+                    addend = inv_binomial * full_value;
                 }
+
+                shapley_values_refs[member] += addend;
             }
         }
 
-        for (size_t i = 0; i < n; i++)
+        std::map<unsigned short int, double> shapley_values;
+        for (unsigned short int i = 0; i < n; i++)
         {
-            shapley_values[players.at(i)] /= n;
+            const double gross_value = shapley_values_refs[grand_coalition.player_at(i)];
+            shapley_values[i] = gross_value / n;
         }
 
         return shapley_values;
     }
-} // namespace Shapley
+} // namespace shapley
 
 #endif

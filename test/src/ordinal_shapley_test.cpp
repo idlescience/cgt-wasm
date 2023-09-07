@@ -2,104 +2,51 @@
 // Created by secci on 25/07/2023.
 //
 #include "cgt_test.h"
-using namespace Shapley;
 
-TEST_CASE("Power set")
+#define TEST_FILES_DIR _TEST_FILES_DIR
+
+TEST_CASE("Shapley")
 {
-    const game test_game = GAMES[0];
-    const std::string test_name = "should work on " + test_game.name;
-    SUBCASE(test_name.c_str())
+    std::string tests_file = TEST_FILES_DIR;
+    tests_file.append("/games.json");
+    ifstream ifs(tests_file);
+    Json::Reader reader;
+    Json::Value games;
+    reader.parse(ifs, games);
+
+    for (int i = 0; i < games.size(); i++)
     {
-        unsigned short int n_in = test_game.n;
-        vector<double> v_in(test_game.v);
-        double prec = pow(10, -3);
+        unsigned short int n = games[i]["n"].asUInt();
 
-        vector<const OrdinalPlayer *> players;
-        for (unsigned short int i = 0; i < n_in; i++)
+        const std::string &test_name = games[i]["name"].asString();
+
+        std::vector<double> v;
+        const Json::Value &v_in = games[i]["v"];
+        for (int j = 0; j < v_in.size(); j++)
         {
-            players.push_back(new OrdinalPlayer(i, v_in));
+            v.push_back(v_in[j].asDouble());
         }
-        Coalition<OrdinalPlayer> grand_coalition(players);
 
-        std::vector<Coalition<OrdinalPlayer>> ans = grand_coalition.power_set();
-
-        CHECK(ans.size() == pow(2, n_in) - 1);
-        CHECK(ans.at(0).player_at(0)->position() == 0);
-        CHECK(ans.at(10).player_at(0)->position() == 0);
-        CHECK(ans.at(10).player_at(1)->position() == 1);
-    }
-}
-
-TEST_CASE("Power set lexicographically ordened")
-{
-    const game test_game = GAMES[0];
-    const std::string test_name = "should display lexicographically ordened payoffs" + test_game.name;
-    SUBCASE(test_name.c_str())
-    {
-        unsigned short int n_in = test_game.n;
-        vector<double> v_in(test_game.v);
-        double prec = pow(10, -3);
-
-        vector<const OrdinalPlayer *> players;
-        for (unsigned short int i = 0; i < n_in; i++)
+        std::vector<double> ground_shapley;
+        const Json::Value &shapley_in = games[i]["shapley"];
+        for (int j = 0; j < shapley_in.size(); j++)
         {
-            players.push_back(new OrdinalPlayer(i, v_in));
+            ground_shapley.push_back(shapley_in[j].asDouble());
         }
-        Coalition<OrdinalPlayer> grand_coalition(players);
-        OrdinalCharacteristicFunction char_func(v_in);
 
-        std::vector<Coalition<OrdinalPlayer>> ans = grand_coalition.power_set();
-
-        ofstream myfile;
-        myfile.open("r_coalition.txt");
-        for (unsigned int i = 0; i < ans.size(); i++)
-        {
-            Coalition<OrdinalPlayer> coalition = ans.at(i);
-            const double value = char_func.value(coalition);
-            myfile << value << "\n";
-        }
-        myfile.close();
-    }
-}
-
-TEST_CASE("Dump test games to files")
-{
-    const game test_game = GAMES[0];
-    const std::string test_name = "should display lexicographically ordened payoffs" + test_game.name;
-    SUBCASE(test_name.c_str())
-    {
-        vector<double> v_in(test_game.v);
-
-        ofstream myfile;
-        myfile.open(test_game.name);
-        for (auto elem : v_in)
-        {
-            myfile << elem << "\n";
-        }
-        myfile.close();
-    }
-}
-
-TEST_CASE("Ordinal Shapley")
-{
-    for (auto test_game : GAMES)
-    {
-        const std::string test_name = "should work on " + test_game.name;
         SUBCASE(test_name.c_str())
         {
-            unsigned short int n_in = test_game.n;
-            vector<double> v_in(test_game.v);
             double prec = pow(10, -3);
 
-            vector<const OrdinalPlayer *> players;
-            for (unsigned short int i = 0; i < n_in; i++)
+            vector<const shapley::OrdinalPlayer *> players;
+            for (unsigned short int i = 0; i < n; i++)
             {
-                players.push_back(new OrdinalPlayer(i, v_in));
+                players.push_back(new shapley::OrdinalPlayer(i, v));
             }
 
-            OrdinalCharacteristicFunction char_func(v_in);
+            shapley::OrdinalCharacteristicFunction char_func(v);
 
-            map<const OrdinalPlayer *, double> shapley_values_map = compute(players, char_func);
+            map<unsigned int short, double> shapley_values_map = compute(players, char_func);
             vector<double> shapley_values_vec;
 
             for (auto elem : shapley_values_map)
@@ -107,12 +54,12 @@ TEST_CASE("Ordinal Shapley")
                 shapley_values_vec.push_back(elem.second);
             }
 
-            for (unsigned int i = 0; i < n_in; i++)
+            for (unsigned int i = 0; i < n; i++)
             {
-                CHECK(abs(shapley_values_vec[i] - test_game.shapley[i]) <= prec);
+                CHECK(abs(shapley_values_vec[i] - ground_shapley[i]) <= prec);
             }
 
-            for (unsigned short int i = 0; i < n_in; i++)
+            for (unsigned short int i = 0; i < n; i++)
             {
                 delete players[i];
             }

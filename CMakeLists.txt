@@ -11,10 +11,10 @@ else ()
     message(" * C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
 
-if (CMAKE_CURRENT_SOURCE_DIR MATCHES "/workspaces.*$")
+if (CMAKE_SOURCE_DIR MATCHES "/workspaces.*$")
     message(" * Github workspace detected")
     set(CMAKE_WORKSPACE "github")
-elseif (CMAKE_CURRENT_SOURCE_DIR MATCHES "/home/runner/work.*$")
+elseif (CMAKE_SOURCE_DIR MATCHES "/home/runner/work.*$")
     message(" * Github runner detected")
     set(CMAKE_WORKSPACE "github")
 else ()
@@ -35,11 +35,11 @@ else ()
     if (CMAKE_WORKSPACE STREQUAL "github")
         set(
                 INCLUDE_DIRECTORIES
-                ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glpk/include
+                ${CMAKE_SOURCE_DIR}/vendor/glpk/include
         )
         set(
                 LIB_DIRECTORIES
-                ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glpk/lib
+                ${CMAKE_SOURCE_DIR}/vendor/glpk/lib
         )
     else ()
         set(

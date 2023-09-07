@@ -6,7 +6,7 @@
 /**
  * Implementation of the computation of the game theoretic Shapley value.
  */
-namespace Group
+namespace group
 {
     /** IMPLEMENTATION */
 
@@ -34,6 +34,6 @@ namespace Group
         return result;
     }
 
-} // namespace Group
+} // namespace group
 
 #endif

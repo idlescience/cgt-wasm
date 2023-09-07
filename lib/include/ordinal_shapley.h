@@ -5,7 +5,7 @@
 
 #include "shapley.h"
 
-namespace Shapley
+namespace shapley
 {
 
     class OrdinalPlayer : public Player
@@ -29,6 +29,6 @@ namespace Shapley
         const std::vector<double> &v_ref;
     };
 
-} // namespace Shapley
+} // namespace shapley
 
 #endif // ORDINAL_SHAPLEY_H

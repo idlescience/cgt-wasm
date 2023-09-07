@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace Shapley
+namespace shapley
 {
 
     OrdinalPlayer::OrdinalPlayer(int position_in, const vector<double> &v)
