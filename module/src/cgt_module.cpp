@@ -1,7 +1,6 @@
 #include "cgt_module.h"
 
 using namespace emscripten;
-using namespace Shapley;
 
 vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
 {
@@ -43,15 +42,15 @@ vector<double> nucleolus_run(vector<double> v_in, unsigned short int n_in)
 
 vector<double> shapley_run(vector<double> v_in, unsigned short int n_in)
 {
-    vector<const OrdinalPlayer *> players;
+    vector<const shapley::OrdinalPlayer *> players;
     for (unsigned short int i = 0; i < n_in; i++)
     {
-        players.push_back(new OrdinalPlayer(i, v_in));
+        players.push_back(new shapley::OrdinalPlayer(i, v_in));
     }
 
-    OrdinalCharacteristicFunction char_func(v_in);
+    shapley::OrdinalCharacteristicFunction char_func(v_in);
 
-    map<const OrdinalPlayer *, double> shapley_values_map = compute(players, char_func);
+    map<unsigned short int, double> shapley_values_map = shapley::compute(players, char_func);
     vector<double> shapley_values_vec;
 
     for (auto elem : shapley_values_map)

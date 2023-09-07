@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstdlib>
-#include <bits/stdc++.h>
 #include <iostream>
 #include <fstream>
 #include "doctest.h"
