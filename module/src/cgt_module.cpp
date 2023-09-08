@@ -50,8 +50,8 @@ vector<double> shapley_run(vector<double> v_in, unsigned short int n_in)
 
     shapley::OrdinalCharacteristicFunction char_func(v_in);
 
-    map<unsigned short int, double> shapley_values_map = shapley::compute(players, char_func);
-    vector<double> shapley_values_vec;
+    std::map<unsigned short int, double> shapley_values_map = shapley::compute(players, char_func);
+    std::vector<double> shapley_values_vec;
 
     for (auto elem : shapley_values_map)
     {

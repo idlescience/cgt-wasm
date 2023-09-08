@@ -38,7 +38,7 @@ TEST_CASE("Shapley")
         {
             double prec = pow(10, -3);
 
-            vector<const shapley::OrdinalPlayer *> players;
+            std::vector<const shapley::OrdinalPlayer *> players;
             for (unsigned short int i = 0; i < n; i++)
             {
                 players.push_back(new shapley::OrdinalPlayer(i));
@@ -46,8 +46,8 @@ TEST_CASE("Shapley")
 
             shapley::OrdinalCharacteristicFunction char_func(v);
 
-            map<unsigned int short, double> shapley_values_map = compute(players, char_func);
-            vector<double> shapley_values_vec;
+            std::map<unsigned int short, double> shapley_values_map = shapley::compute(players, char_func);
+            std::vector<double> shapley_values_vec;
 
             for (auto elem : shapley_values_map)
             {
