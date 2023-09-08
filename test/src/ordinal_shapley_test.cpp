@@ -41,7 +41,7 @@ TEST_CASE("Shapley")
             vector<const shapley::OrdinalPlayer *> players;
             for (unsigned short int i = 0; i < n; i++)
             {
-                players.push_back(new shapley::OrdinalPlayer(i, v));
+                players.push_back(new shapley::OrdinalPlayer(i));
             }
 
             shapley::OrdinalCharacteristicFunction char_func(v);

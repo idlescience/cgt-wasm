@@ -5,8 +5,8 @@ using namespace std;
 namespace shapley
 {
 
-    OrdinalPlayer::OrdinalPlayer(int position_in, const vector<double> &v)
-        : m_position(position_in), v_ref(v) {}
+    OrdinalPlayer::OrdinalPlayer(int position_in)
+        : m_position(position_in) {}
 
     int OrdinalPlayer::position() const
     {

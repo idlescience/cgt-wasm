@@ -45,7 +45,7 @@ vector<double> shapley_run(vector<double> v_in, unsigned short int n_in)
     vector<const shapley::OrdinalPlayer *> players;
     for (unsigned short int i = 0; i < n_in; i++)
     {
-        players.push_back(new shapley::OrdinalPlayer(i, v_in));
+        players.push_back(new shapley::OrdinalPlayer(i));
     }
 
     shapley::OrdinalCharacteristicFunction char_func(v_in);

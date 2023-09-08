@@ -11,12 +11,11 @@ namespace shapley
     class OrdinalPlayer : public Player
     {
     public:
-        explicit OrdinalPlayer(int position_in, const std::vector<double> &v);
+        explicit OrdinalPlayer(int position_in);
         int position() const;
 
     protected:
         int m_position;
-        const std::vector<double> &v_ref;
     };
 
     class OrdinalCharacteristicFunction : public CharacteristicFunction<OrdinalPlayer>
