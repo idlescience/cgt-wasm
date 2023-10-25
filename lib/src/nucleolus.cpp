@@ -1,6 +1,6 @@
 #include "nucleolus.h"
 
-#define MAX_LP_COEF_INDEX 16384
+#define MAX_LP_COEF_INDEX 1023
 
 void nucleolus(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled, unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t, vector<double> &x, vector<vector<bool>> &A, double &t1, vector<double> &singleton_bounds, bool &nlsu)
 {
