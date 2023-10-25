@@ -13,6 +13,7 @@ set(
         TEST_FILES
         ${JSONCPP_SRC}
         src/main_test.cpp
+        src/iea_nucleolus_test.cpp
         src/nucleolus_test.cpp
         src/ordinal_shapley_test.cpp
 )

@@ -1,5 +1,7 @@
 #include "nucleolus.h"
 
+#define MAX_LP_COEF_INDEX 16384
+
 void nucleolus(bool &disp, unsigned short int &n, unsigned int &s, vector<double> &excess, double &prec, vector<bool> &unsettled, unsigned short int &iter, unsigned int &piv, unsigned int &sr, double &t, vector<double> &x, vector<vector<bool>> &A, double &t1, vector<double> &singleton_bounds, bool &nlsu)
 {
 	vector<bool> unsettled_p(n, true);
@@ -206,9 +208,9 @@ void subroutine(vector<bool> &U, vector<bool> &U2, vector<vector<bool>> &Atight,
 
 	glp_term_out(GLP_OFF);
 	glp_prob *lp;
-	int ia[1 + 1000] = {0};
-	int ja[1 + 1000] = {0};
-	double ar[1 + 1000] = {0};
+	int ia[1 + MAX_LP_COEF_INDEX] = {0};
+	int ja[1 + MAX_LP_COEF_INDEX] = {0};
+	double ar[1 + MAX_LP_COEF_INDEX] = {0};
 	lp = glp_create_prob();
 	glp_set_prob_name(lp, "P(1)");
 	glp_set_obj_dir(lp, GLP_MAX);
@@ -616,9 +618,9 @@ void imprdir(vector<double> &d, unsigned short int &n, unsigned int &t_size, uns
 {
 	glp_term_out(GLP_OFF);
 	glp_prob *lp;
-	int ia[1 + 1000] = {0};
-	int ja[1 + 1000] = {0};
-	double ar[1 + 1000] = {0};
+	int ia[1 + MAX_LP_COEF_INDEX] = {0};
+	int ja[1 + MAX_LP_COEF_INDEX] = {0};
+	double ar[1 + MAX_LP_COEF_INDEX] = {0};
 	lp = glp_create_prob();
 	glp_set_prob_name(lp, "IMPRDIR");
 	glp_set_obj_dir(lp, GLP_MIN);
